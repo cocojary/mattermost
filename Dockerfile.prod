@@ -12,12 +12,11 @@ WORKDIR /mattermost/server
 
 # Copy go.mod trước để cache dependencies
 COPY server/go.mod server/go.sum ./
-# Copy server/public để local replace hoạt động
-COPY server/public/ ../public/
+# Copy server/public vào ./public (go.mod replace trỏ tới ./public)
+COPY server/public/ ./public/
 
-# Dùng local server/public thay vì version cũ trên internet (thiếu IntuneSettings, Translation...)
-RUN go mod edit -replace github.com/mattermost/mattermost/server/public=../public && \
-    go mod download
+# Download dependencies (local replace đã có trong go.mod)
+RUN go mod download
 
 # Copy toàn bộ server source
 COPY server/ .
