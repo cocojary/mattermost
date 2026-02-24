@@ -16,12 +16,14 @@ RUN go mod download
 
 # Copy source và build binary
 COPY server/ .
-RUN apk add --no-cache make git gcc musl-dev && \
-    make build-linux 2>/dev/null || \
-    go build -o dist/mattermost ./cmd/mattermost
+RUN apk add --no-cache git gcc musl-dev && \
+    go build -trimpath -tags 'sourceavailable' -o dist/mattermost ./cmd/mattermost
 
 # ── Stage 2: Build webapp (React/TypeScript) ──────────────────
 FROM node:20-alpine AS webapp-builder
+
+# Build tools cho native npm packages (gifsicle cần autoconf/automake)
+RUN apk add --no-cache autoconf automake libtool nasm python3 make g++
 
 WORKDIR /mattermost/webapp
 
@@ -29,7 +31,7 @@ WORKDIR /mattermost/webapp
 COPY webapp/ .
 
 # Install dependencies và build
-RUN npm ci || npm install
+RUN npm install --ignore-scripts
 RUN npm run build
 
 # ── Stage 3: Runtime image ────────────────────────────────────
