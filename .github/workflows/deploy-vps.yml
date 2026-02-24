@@ -1,27 +1,71 @@
-name: Deploy to VPS
+name: Build & Deploy to VPS
 
 on:
   push:
     branches:
       - master   # Trigger khi merge develop → master
   workflow_dispatch:
-    inputs:
-      force_deploy:
-        description: 'Force deploy'
-        required: false
-        default: 'false'
 
 concurrency:
   group: deploy-vps
   cancel-in-progress: false
 
 env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}   # ghcr.io/cocojary/mattermost
   DEPLOY_PATH: /opt/mattermost
   COMPOSE_FILE: docker-compose.prod.yml
 
 jobs:
+  build-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # Cho phép push lên GHCR
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login vào GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tạo image metadata (tag)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - name: Setup Docker Buildx (multi-platform + cache)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build và Push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha        # Cache GitHub Actions
+          cache-to: type=gha,mode=max
+
   deploy:
     name: Deploy to VPS
+    needs: build-push
     runs-on: ubuntu-latest
     environment:
       name: production
@@ -38,7 +82,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.VPS_SSH_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Copy files to VPS
+      - name: Copy files lên VPS
         run: |
           scp -i ~/.ssh/deploy_key \
             -P ${{ secrets.VPS_SSH_PORT }} \
@@ -51,7 +95,7 @@ jobs:
             scripts/deploy.sh scripts/rollback.sh \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.DEPLOY_PATH }}/scripts/
 
-      - name: Deploy
+      - name: Deploy lên VPS
         run: |
           ssh -i ~/.ssh/deploy_key \
             -p ${{ secrets.VPS_SSH_PORT }} \
@@ -59,7 +103,7 @@ jobs:
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "export DEPLOY_PATH='${{ env.DEPLOY_PATH }}' && \
              export COMPOSE_FILE='${{ env.COMPOSE_FILE }}' && \
-             export MM_VERSION='latest' && \
+             export MM_IMAGE='${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest' && \
              bash ${{ env.DEPLOY_PATH }}/scripts/deploy.sh"
 
       - name: Cleanup SSH key
@@ -71,10 +115,10 @@ jobs:
         run: |
           STATUS="${{ job.status }}"
           if [ "$STATUS" = "success" ]; then
-            ICON=":rocket:"; MSG="✅ Deploy thành công"
+            ICON=":rocket:"; MSG="✅ Deploy thành công từ source"
           else
             ICON=":red_circle:"; MSG="❌ Deploy thất bại"
           fi
           curl -s -X POST "${{ secrets.MM_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"username\":\"GitHub Actions\",\"icon_emoji\":\"$ICON\",\"text\":\"$MSG | Branch: \`${{ github.ref_name }}\` | By: @${{ github.actor }} | http://${{ secrets.VPS_HOST }}:8065\"}"
+            -d "{\"username\":\"GitHub Actions\",\"icon_emoji\":\"$ICON\",\"text\":\"$MSG | Branch: \`${{ github.ref_name }}\` | Commit: \`$(echo ${{ github.sha }} | cut -c1-7)\` | By: @${{ github.actor }}\"}"

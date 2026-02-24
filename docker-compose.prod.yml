@@ -25,7 +25,7 @@ services:
       start_period: 30s
 
   mattermost:
-    image: mattermost/mattermost-team-edition:${MM_VERSION:-latest}
+    image: ${MM_IMAGE:-ghcr.io/cocojary/mattermost:latest}
     container_name: mattermost-app
     restart: unless-stopped
     depends_on:

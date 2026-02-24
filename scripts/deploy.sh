@@ -1,8 +1,11 @@
 #!/bin/bash
-# =============================================================
+# ============================================================
 # Deploy Script - Chạy trên VPS bởi GitHub Actions
-# Không chạy trực tiếp tay trừ khi hiểu rõ tác động
-# =============================================================
+# Yêu cầu env:
+#   DEPLOY_PATH   - đường dẫn thư mục deploy (vd: /opt/mattermost)
+#   COMPOSE_FILE  - tên file docker-compose (vd: docker-compose.prod.yml)
+#   MM_IMAGE      - image GHCR (vd: ghcr.io/cocojary/mattermost:latest)
+# ============================================================
 
 set -euo pipefail
 
@@ -11,56 +14,52 @@ CYAN='\033[0;36m'; NC='\033[0m'
 
 log_info()    { echo -e "${CYAN}[$(date '+%H:%M:%S')] INFO ${NC} $1"; }
 log_success() { echo -e "${GREEN}[$(date '+%H:%M:%S')] OK   ${NC} $1"; }
-log_warn()    { echo -e "${YELLOW}[$(date '+%H:%M:%S')] WARN ${NC} $1"; }
 log_error()   { echo -e "${RED}[$(date '+%H:%M:%S')] ERR  ${NC} $1"; exit 1; }
 
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/mattermost}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-RELEASES_DIR="$DEPLOY_PATH/releases"
+MM_IMAGE="${MM_IMAGE:-ghcr.io/cocojary/mattermost:latest}"
 ENV_FILE="$DEPLOY_PATH/.env"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+RELEASES_DIR="$DEPLOY_PATH/releases"
+
+log_info "====== BẮT ĐẦU DEPLOY ======"
+log_info "Image: $MM_IMAGE"
 
 # ── Kiểm tra điều kiện ───────────────────────────────────────
-[ -f "$ENV_FILE" ] || log_error "Không tìm thấy $ENV_FILE. Hãy tạo file .env trên VPS!"
+[ -f "$ENV_FILE" ]   || log_error "Không tìm thấy $ENV_FILE!"
+[ -f "$DEPLOY_PATH/$COMPOSE_FILE" ] || log_error "Không tìm thấy $DEPLOY_PATH/$COMPOSE_FILE!"
 
-# ── Lưu version hiện tại để rollback ────────────────────────
-log_info "Lưu trạng thái hiện tại..."
 mkdir -p "$RELEASES_DIR"
 
-# Lưu image ID hiện tại
+# ── Lưu trạng thái hiện tại để rollback ──────────────────────
 CURRENT_IMAGE=$(docker inspect --format='{{.Config.Image}}' mattermost-app 2>/dev/null || echo "none")
 echo "$CURRENT_IMAGE" > "$RELEASES_DIR/last_image.txt"
-echo "$TIMESTAMP" > "$RELEASES_DIR/last_deploy.txt"
 log_info "Phiên bản hiện tại: $CURRENT_IMAGE"
 
-# ── Pull image mới nhất ───────────────────────────────────────
-log_info "Pull Mattermost image mới nhất..."
-MM_VERSION=$(grep 'MM_VERSION=' "$ENV_FILE" | cut -d'=' -f2 | tr -d ' ')
-MM_VERSION="${MM_VERSION:-latest}"
-docker pull "mattermost/mattermost-team-edition:${MM_VERSION}" || log_error "Không thể pull image!"
-log_success "Pull image hoàn tất: mattermost-team-edition:${MM_VERSION}"
+# ── Pull image mới từ GHCR ────────────────────────────────────
+log_info "Pull image mới: $MM_IMAGE"
+docker pull "$MM_IMAGE" || log_error "Không thể pull image: $MM_IMAGE"
+log_success "Pull image xong"
 
-# ── Deploy ───────────────────────────────────────────────────
-log_info "Đang deploy với docker compose..."
+# ── Ghi image vào .env để docker compose dùng ────────────────
+# Cập nhật hoặc thêm biến MM_IMAGE vào .env
+if grep -q "^MM_IMAGE=" "$ENV_FILE"; then
+  sed -i "s|^MM_IMAGE=.*|MM_IMAGE=${MM_IMAGE}|" "$ENV_FILE"
+else
+  echo "MM_IMAGE=${MM_IMAGE}" >> "$ENV_FILE"
+fi
+
+# ── Restart containers ────────────────────────────────────────
+log_info "Khởi động lại containers..."
 cd "$DEPLOY_PATH"
-
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --pull always
-
-log_success "Deploy containers đã khởi động"
-
-# ── Kiểm tra containers đang chạy ────────────────────────────
-log_info "Kiểm tra trạng thái containers..."
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate mattermost
 sleep 5
 docker compose -f "$COMPOSE_FILE" ps
 
-# ── Cleanup images cũ (giữ lại 3 images) ────────────────────
-log_info "Dọn dẹp images cũ..."
-docker image prune -f --filter "until=72h" || true
-log_success "Cleanup hoàn tất"
-
-# ── Ghi log deploy ───────────────────────────────────────────
+# ── Ghi log ──────────────────────────────────────────────────
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 cat >> "$RELEASES_DIR/deploy_history.log" << EOF
-[$TIMESTAMP] Deploy thành công | Image: mattermost-team-edition:${MM_VERSION} | Prev: $CURRENT_IMAGE
+[$TIMESTAMP] DEPLOY OK | Image: $MM_IMAGE | Prev: $CURRENT_IMAGE
 EOF
 
-log_success "Deploy hoàn tất! ✅"
+log_success "====== DEPLOY HOÀN TẤT ======"
