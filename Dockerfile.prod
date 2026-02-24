@@ -25,12 +25,11 @@ FROM node:20-alpine AS webapp-builder
 
 WORKDIR /mattermost/webapp
 
-# Cache npm packages
-COPY webapp/package*.json ./
-RUN npm ci --prefer-offline 2>/dev/null || npm install
-
-# Copy source và build
+# Copy toàn bộ webapp (cần cho npm workspaces resolution)
 COPY webapp/ .
+
+# Install dependencies và build
+RUN npm ci || npm install
 RUN npm run build
 
 # ── Stage 3: Runtime image ────────────────────────────────────
