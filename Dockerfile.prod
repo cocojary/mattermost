@@ -10,14 +10,21 @@ FROM golang:1.24-alpine AS server-builder
 
 WORKDIR /mattermost/server
 
-# Cache Go modules
+# Copy go.mod trước để cache dependencies
 COPY server/go.mod server/go.sum ./
-RUN go mod download
+# Copy server/public để local replace hoạt động
+COPY server/public/ ../public/
 
-# Copy source và build binary
+# Dùng local server/public thay vì version cũ trên internet (thiếu IntuneSettings, Translation...)
+RUN go mod edit -replace github.com/mattermost/mattermost/server/public=../public && \
+    go mod download
+
+# Copy toàn bộ server source
 COPY server/ .
+
+# Build binary
 RUN apk add --no-cache git gcc musl-dev && \
-    go build -trimpath -tags 'sourceavailable' -o dist/mattermost ./cmd/mattermost
+    go build -trimpath -tags 'sourceavailable' -o bin/mattermost ./cmd/mattermost
 
 # ── Stage 2: Build webapp (React/TypeScript) ──────────────────
 FROM node:20-alpine AS webapp-builder
@@ -48,7 +55,7 @@ WORKDIR /mattermost
 
 # Copy binary từ server builder
 COPY --from=server-builder --chown=2000:2000 \
-    /mattermost/server/dist/mattermost ./bin/mattermost
+    /mattermost/server/bin/mattermost ./bin/mattermost
 
 # Copy i18n, templates, fonts (cần cho server)
 COPY --from=server-builder --chown=2000:2000 \
