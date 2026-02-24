@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: http://${{ secrets.VPS_HOST }}:8065
+      url: http://103.146.23.11:8065
 
     steps:
       - name: Checkout code
