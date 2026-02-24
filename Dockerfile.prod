@@ -28,16 +28,17 @@ RUN apk add --no-cache git gcc musl-dev && \
 # ── Stage 2: Build webapp (React/TypeScript) ──────────────────
 FROM node:20-alpine AS webapp-builder
 
-# Build tools cho native npm packages (gifsicle cần autoconf/automake)
-RUN apk add --no-cache autoconf automake libtool nasm python3 make g++
+# Build tools cho native npm packages (mozjpeg, gifsicle, optipng, pngquant)
+RUN apk add --no-cache autoconf automake libtool nasm python3 make g++ \
+    libjpeg-turbo-dev libpng-dev zlib-dev
 
 WORKDIR /mattermost/webapp
 
 # Copy toàn bộ webapp (cần cho npm workspaces resolution)
 COPY webapp/ .
 
-# Install dependencies và build
-RUN npm install --ignore-scripts
+# Install dependencies (CHO PHÉP postinstall scripts để download native binaries)
+RUN npm ci
 RUN npm run build
 
 # ── Stage 3: Runtime image ────────────────────────────────────
