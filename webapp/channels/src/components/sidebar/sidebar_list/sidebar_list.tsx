@@ -447,6 +447,7 @@ export class SidebarList extends React.PureComponent<Props, State> {
             channelList = (
                 <>
                     {unreadsCategory}
+                    <RecentlyViewedChannels />
                     <DragDropContext
                         onDragEnd={this.onDragEnd}
                         onBeforeDragStart={this.onBeforeDragStart}
@@ -471,7 +472,6 @@ export class SidebarList extends React.PureComponent<Props, State> {
                             }}
                         </Droppable>
                     </DragDropContext>
-                    <RecentlyViewedChannels />
                 </>
             );
         }

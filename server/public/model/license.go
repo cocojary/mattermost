@@ -229,55 +229,55 @@ func (f *Features) SetDefaults() {
 	}
 
 	if f.Users == nil {
-		f.Users = NewPointer(0)
+		f.Users = NewPointer(1000)
 	}
 
 	if f.LDAP == nil {
-		f.LDAP = NewPointer(*f.FutureFeatures)
+		f.LDAP = NewPointer(true)
 	}
 
 	if f.LDAPGroups == nil {
-		f.LDAPGroups = NewPointer(*f.FutureFeatures)
+		f.LDAPGroups = NewPointer(true)
 	}
 
 	if f.MFA == nil {
-		f.MFA = NewPointer(*f.FutureFeatures)
+		f.MFA = NewPointer(true)
 	}
 
 	if f.GoogleOAuth == nil {
-		f.GoogleOAuth = NewPointer(*f.FutureFeatures)
+		f.GoogleOAuth = NewPointer(true)
 	}
 
 	if f.Office365OAuth == nil {
-		f.Office365OAuth = NewPointer(*f.FutureFeatures)
+		f.Office365OAuth = NewPointer(true)
 	}
 
 	if f.OpenId == nil {
-		f.OpenId = NewPointer(*f.FutureFeatures)
+		f.OpenId = NewPointer(true)
 	}
 
 	if f.Compliance == nil {
-		f.Compliance = NewPointer(*f.FutureFeatures)
+		f.Compliance = NewPointer(true)
 	}
 
 	if f.Cluster == nil {
-		f.Cluster = NewPointer(*f.FutureFeatures)
+		f.Cluster = NewPointer(true)
 	}
 
 	if f.Metrics == nil {
-		f.Metrics = NewPointer(*f.FutureFeatures)
+		f.Metrics = NewPointer(true)
 	}
 
 	if f.MHPNS == nil {
-		f.MHPNS = NewPointer(*f.FutureFeatures)
+		f.MHPNS = NewPointer(true)
 	}
 
 	if f.SAML == nil {
-		f.SAML = NewPointer(*f.FutureFeatures)
+		f.SAML = NewPointer(true)
 	}
 
 	if f.Elasticsearch == nil {
-		f.Elasticsearch = NewPointer(*f.FutureFeatures)
+		f.Elasticsearch = NewPointer(true)
 	}
 
 	if f.Announcement == nil {
@@ -289,47 +289,47 @@ func (f *Features) SetDefaults() {
 	}
 
 	if f.EmailNotificationContents == nil {
-		f.EmailNotificationContents = NewPointer(*f.FutureFeatures)
+		f.EmailNotificationContents = NewPointer(true)
 	}
 
 	if f.DataRetention == nil {
-		f.DataRetention = NewPointer(*f.FutureFeatures)
+		f.DataRetention = NewPointer(true)
 	}
 
 	if f.MessageExport == nil {
-		f.MessageExport = NewPointer(*f.FutureFeatures)
+		f.MessageExport = NewPointer(true)
 	}
 
 	if f.CustomPermissionsSchemes == nil {
-		f.CustomPermissionsSchemes = NewPointer(*f.FutureFeatures)
+		f.CustomPermissionsSchemes = NewPointer(true)
 	}
 
 	if f.GuestAccounts == nil {
-		f.GuestAccounts = NewPointer(*f.FutureFeatures)
+		f.GuestAccounts = NewPointer(true)
 	}
 
 	if f.GuestAccountsPermissions == nil {
-		f.GuestAccountsPermissions = NewPointer(*f.FutureFeatures)
+		f.GuestAccountsPermissions = NewPointer(true)
 	}
 
 	if f.CustomTermsOfService == nil {
-		f.CustomTermsOfService = NewPointer(*f.FutureFeatures)
+		f.CustomTermsOfService = NewPointer(true)
 	}
 
 	if f.IDLoadedPushNotifications == nil {
-		f.IDLoadedPushNotifications = NewPointer(*f.FutureFeatures)
+		f.IDLoadedPushNotifications = NewPointer(true)
 	}
 
 	if f.LockTeammateNameDisplay == nil {
-		f.LockTeammateNameDisplay = NewPointer(*f.FutureFeatures)
+		f.LockTeammateNameDisplay = NewPointer(true)
 	}
 
 	if f.EnterprisePlugins == nil {
-		f.EnterprisePlugins = NewPointer(*f.FutureFeatures)
+		f.EnterprisePlugins = NewPointer(true)
 	}
 
 	if f.AdvancedLogging == nil {
-		f.AdvancedLogging = NewPointer(*f.FutureFeatures)
+		f.AdvancedLogging = NewPointer(true)
 	}
 
 	if f.Cloud == nil {
@@ -337,15 +337,15 @@ func (f *Features) SetDefaults() {
 	}
 
 	if f.SharedChannels == nil {
-		f.SharedChannels = NewPointer(*f.FutureFeatures)
+		f.SharedChannels = NewPointer(true)
 	}
 
 	if f.RemoteClusterService == nil {
-		f.RemoteClusterService = NewPointer(*f.FutureFeatures)
+		f.RemoteClusterService = NewPointer(true)
 	}
 
 	if f.OutgoingOAuthConnections == nil {
-		f.OutgoingOAuthConnections = NewPointer(*f.FutureFeatures)
+		f.OutgoingOAuthConnections = NewPointer(true)
 	}
 }
 
