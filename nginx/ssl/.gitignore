@@ -1,0 +1,4 @@
+# Giữ thư mục này trong git tracker nhưng không commit cert files
+*.crt
+*.key
+*.pem
