@@ -3,25 +3,25 @@
 
 import classNames from 'classnames';
 import React from 'react';
-import {type WrappedComponentProps, injectIntl} from 'react-intl';
-import {Link} from 'react-router-dom';
+import { type WrappedComponentProps, injectIntl } from 'react-intl';
+import { Link } from 'react-router-dom';
 
-import type {Channel} from '@mattermost/types/channels';
+import type { Channel } from '@mattermost/types/channels';
 
-import {mark} from 'actions/telemetry_actions';
+import { mark } from 'actions/telemetry_actions';
 
 import CustomStatusEmoji from 'components/custom_status/custom_status_emoji';
 import SharedChannelIndicator from 'components/shared_channel_indicator';
-import {ChannelsAndDirectMessagesTour} from 'components/tours/onboarding_tour';
+import { ChannelsAndDirectMessagesTour } from 'components/tours/onboarding_tour';
 import WithTooltip from 'components/with_tooltip';
 
 import Pluggable from 'plugins/pluggable';
-import Constants, {RHSStates} from 'utils/constants';
-import {wrapEmojis} from 'utils/emoji_utils';
-import {cmdOrCtrlPressed} from 'utils/keyboard';
-import {Mark} from 'utils/performance_telemetry';
+import Constants, { RHSStates } from 'utils/constants';
+import { wrapEmojis } from 'utils/emoji_utils';
+import { cmdOrCtrlPressed } from 'utils/keyboard';
+import { Mark } from 'utils/performance_telemetry';
 
-import type {RhsState} from 'types/store/rhs';
+import type { RhsState } from 'types/store/rhs';
 
 import ChannelMentionBadge from '../channel_mention_badge';
 import ChannelPencilIcon from '../channel_pencil_icon';
@@ -73,6 +73,7 @@ type Props = WrappedComponentProps & {
         unsetEditingPost: () => void;
         closeRightHandSide: () => void;
         fetchChannelRemotes: (channelId: string) => void;
+        updateRecentlyViewedChannels: (channelId: string) => void;
     };
 };
 
@@ -119,11 +120,11 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
     enableToolTipIfNeeded = (): void => {
         const element = this.labelRef.current;
         const showTooltip = element && element.offsetWidth < element.scrollWidth;
-        this.setState({showTooltip: Boolean(showTooltip)});
+        this.setState({ showTooltip: Boolean(showTooltip) });
     };
 
     getAriaLabel = (): string => {
-        const {label, ariaLabelPrefix, unreadMentions, intl} = this.props;
+        const { label, ariaLabelPrefix, unreadMentions, intl } = this.props;
 
         let ariaLabel = label;
 
@@ -132,13 +133,13 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
         }
 
         if (unreadMentions === 1) {
-            ariaLabel += ` ${unreadMentions} ${intl.formatMessage({id: 'accessibility.sidebar.types.mention', defaultMessage: 'mention'})}`;
+            ariaLabel += ` ${unreadMentions} ${intl.formatMessage({ id: 'accessibility.sidebar.types.mention', defaultMessage: 'mention' })}`;
         } else if (unreadMentions > 1) {
-            ariaLabel += ` ${unreadMentions} ${intl.formatMessage({id: 'accessibility.sidebar.types.mentions', defaultMessage: 'mentions'})}`;
+            ariaLabel += ` ${unreadMentions} ${intl.formatMessage({ id: 'accessibility.sidebar.types.mentions', defaultMessage: 'mentions' })}`;
         }
 
         if (this.props.isUnread && unreadMentions === 0) {
-            ariaLabel += ` ${intl.formatMessage({id: 'accessibility.sidebar.types.unread', defaultMessage: 'unread'})}`;
+            ariaLabel += ` ${intl.formatMessage({ id: 'accessibility.sidebar.types.unread', defaultMessage: 'unread' })}`;
         }
 
         return ariaLabel.toLowerCase();
@@ -147,6 +148,11 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
     handleChannelClick = (event: React.MouseEvent<HTMLAnchorElement>): void => {
         mark(Mark.ChannelLinkClicked);
         this.handleSelectChannel(event);
+
+        // Track this channel in recently viewed list (normal click only, not ctrl/shift/alt)
+        if (!event.defaultPrevented && event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+            this.props.actions.updateRecentlyViewedChannels(this.props.channel.id);
+        }
 
         if (this.props.rhsOpen && this.props.rhsState === RHSStates.EDIT_HISTORY) {
             this.props.actions.closeRightHandSide();
@@ -173,7 +179,7 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
     };
 
     handleMenuToggle = (isMenuOpen: boolean) => {
-        this.setState({isMenuOpen});
+        this.setState({ isMenuOpen });
     };
 
     render(): JSX.Element {
@@ -196,7 +202,7 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
         // firstChannelName is based on channel.name,
         // but we want to display `display_name` to the user, so we check against `.name` for channel equality but pass in the .display_name value
         if (firstChannelName === channel.name || (!firstChannelName && showChannelsTutorialStep && channel.name === Constants.DEFAULT_CHANNEL)) {
-            channelsTutorialTip = firstChannelName ? (<ChannelsAndDirectMessagesTour firstChannelName={channel.display_name}/>) : <ChannelsAndDirectMessagesTour/>;
+            channelsTutorialTip = firstChannelName ? (<ChannelsAndDirectMessagesTour firstChannelName={channel.display_name} />) : <ChannelsAndDirectMessagesTour />;
         }
 
         let labelElement: JSX.Element = (
@@ -258,7 +264,7 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
                     />
                     {sharedChannelIcon}
                 </div>
-                <ChannelPencilIcon id={channel.id}/>
+                <ChannelPencilIcon id={channel.id} />
                 <ChannelMentionBadge
                     unreadMentions={unreadMentions}
                     hasUrgent={hasUrgent}
@@ -267,8 +273,8 @@ export class SidebarChannelLink extends React.PureComponent<Props, State> {
                     className={classNames(
                         'SidebarMenu',
                         'MenuWrapper',
-                        {menuOpen: this.state.isMenuOpen},
-                        {'MenuWrapper--open': this.state.isMenuOpen},
+                        { menuOpen: this.state.isMenuOpen },
+                        { 'MenuWrapper--open': this.state.isMenuOpen },
                     )}
                 >
                     <SidebarChannelMenu

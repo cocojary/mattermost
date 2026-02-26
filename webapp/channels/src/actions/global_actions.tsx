@@ -1,40 +1,40 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {batchActions} from 'redux-batched-actions';
+import { batchActions } from 'redux-batched-actions';
 
-import type {Channel, ChannelMembership} from '@mattermost/types/channels';
-import type {Post, PostType} from '@mattermost/types/posts';
-import type {Team} from '@mattermost/types/teams';
-import type {UserProfile} from '@mattermost/types/users';
+import type { Channel, ChannelMembership } from '@mattermost/types/channels';
+import type { Post, PostType } from '@mattermost/types/posts';
+import type { Team } from '@mattermost/types/teams';
+import type { UserProfile } from '@mattermost/types/users';
 
-import {ChannelTypes} from 'mattermost-redux/action_types';
-import {fetchAppBindings} from 'mattermost-redux/actions/apps';
+import { ChannelTypes } from 'mattermost-redux/action_types';
+import { fetchAppBindings } from 'mattermost-redux/actions/apps';
 import {
     fetchChannelsAndMembers,
     getChannelByNameAndTeamName,
     getChannelStats,
     selectChannel,
 } from 'mattermost-redux/actions/channels';
-import {fetchTeamScheduledPosts} from 'mattermost-redux/actions/scheduled_posts';
-import {logout, loadMe} from 'mattermost-redux/actions/users';
-import {Preferences} from 'mattermost-redux/constants';
-import {appsEnabled} from 'mattermost-redux/selectors/entities/apps';
-import {getCurrentChannelStats, getCurrentChannelId, getMyChannelMember, getRedirectChannelNameForTeam, getChannelsNameMapInTeam, getAllDirectChannels, getChannelMessageCount} from 'mattermost-redux/selectors/entities/channels';
-import {getConfig, isPerformanceDebuggingEnabled} from 'mattermost-redux/selectors/entities/general';
-import {getBool, getIsOnboardingFlowEnabled, isCollapsedThreadsEnabled} from 'mattermost-redux/selectors/entities/preferences';
-import {getCurrentTeamId, getMyTeams, getTeam, getMyTeamMember, getTeamMemberships, getActiveTeamsList} from 'mattermost-redux/selectors/entities/teams';
-import {getCurrentUser, getCurrentUserId, isFirstAdmin} from 'mattermost-redux/selectors/entities/users';
-import {calculateUnreadCount} from 'mattermost-redux/utils/channel_utils';
+import { fetchTeamScheduledPosts } from 'mattermost-redux/actions/scheduled_posts';
+import { logout, loadMe } from 'mattermost-redux/actions/users';
+import { Preferences } from 'mattermost-redux/constants';
+import { appsEnabled } from 'mattermost-redux/selectors/entities/apps';
+import { getCurrentChannelStats, getCurrentChannelId, getMyChannelMember, getRedirectChannelNameForTeam, getChannelsNameMapInTeam, getAllDirectChannels, getChannelMessageCount } from 'mattermost-redux/selectors/entities/channels';
+import { getConfig, isPerformanceDebuggingEnabled } from 'mattermost-redux/selectors/entities/general';
+import { getBool, getIsOnboardingFlowEnabled, isCollapsedThreadsEnabled } from 'mattermost-redux/selectors/entities/preferences';
+import { getCurrentTeamId, getMyTeams, getTeam, getMyTeamMember, getTeamMemberships, getActiveTeamsList } from 'mattermost-redux/selectors/entities/teams';
+import { getCurrentUser, getCurrentUserId, isFirstAdmin } from 'mattermost-redux/selectors/entities/users';
+import { calculateUnreadCount } from 'mattermost-redux/utils/channel_utils';
 
-import {handleNewPost} from 'actions/post_actions';
-import {loadProfilesForSidebar} from 'actions/user_actions';
-import {clearUserCookie} from 'actions/views/cookie';
-import {close as closeLhs} from 'actions/views/lhs';
-import {closeRightHandSide, closeMenu as closeRhsMenu, updateRhsState} from 'actions/views/rhs';
+import { handleNewPost } from 'actions/post_actions';
+import { loadProfilesForSidebar } from 'actions/user_actions';
+import { clearUserCookie } from 'actions/views/cookie';
+import { close as closeLhs } from 'actions/views/lhs';
+import { closeRightHandSide, closeMenu as closeRhsMenu, updateRhsState } from 'actions/views/rhs';
 import * as WebsocketActions from 'actions/websocket_actions';
-import {getCurrentLocale} from 'selectors/i18n';
-import {getIsRhsOpen, getPreviousRhsState, getRhsState} from 'selectors/rhs';
+import { getCurrentLocale } from 'selectors/i18n';
+import { getIsRhsOpen, getPreviousRhsState, getRhsState } from 'selectors/rhs';
 import BrowserStore from 'stores/browser_store';
 import LocalStorageStore from 'stores/local_storage_store';
 import store from 'stores/redux_store';
@@ -42,15 +42,15 @@ import store from 'stores/redux_store';
 import SubMenuModal from 'components/widgets/menu/menu_modals/submenu_modal/submenu_modal';
 
 import WebSocketClient from 'client/web_websocket_client';
-import {getHistory} from 'utils/browser_history';
-import {ActionTypes, PostTypes, RHSStates, ModalIdentifiers, PreviousViewedTypes} from 'utils/constants';
+import { getHistory } from 'utils/browser_history';
+import { ActionTypes, PostTypes, RHSStates, ModalIdentifiers, PreviousViewedTypes } from 'utils/constants';
 import DesktopApp from 'utils/desktop_api';
-import {filterAndSortTeamsByDisplayName} from 'utils/team_utils';
+import { filterAndSortTeamsByDisplayName } from 'utils/team_utils';
 import * as Utils from 'utils/utils';
 
-import type {ActionFuncAsync, ThunkActionFunc, GlobalState} from 'types/store';
+import type { ActionFuncAsync, ThunkActionFunc, GlobalState } from 'types/store';
 
-import {openModal} from './views/modals';
+import { openModal } from './views/modals';
 
 const dispatch = store.dispatch;
 const getState = store.getState;
@@ -95,6 +95,15 @@ export function emitChannelClickEvent(channel: Channel) {
             loadProfilesForSidebar();
         }
 
+        const MAX_RECENT_CHANNELS = 10;
+        let recentChannels = LocalStorageStore.getRecentChannels(userId, teamId);
+        recentChannels = recentChannels.filter((id) => id !== chan.id);
+        recentChannels.unshift(chan.id);
+        if (recentChannels.length > MAX_RECENT_CHANNELS) {
+            recentChannels = recentChannels.slice(0, MAX_RECENT_CHANNELS);
+        }
+        LocalStorageStore.setRecentChannels(userId, teamId, recentChannels);
+
         dispatch(batchActions([
             {
                 type: ChannelTypes.SELECT_CHANNEL,
@@ -105,6 +114,10 @@ export function emitChannelClickEvent(channel: Channel) {
                 data: chan.id,
                 channel: chan,
                 member: member || {},
+            },
+            {
+                type: ActionTypes.UPDATE_RECENTLY_VIEWED_CHANNELS,
+                data: recentChannels,
             },
             setLastUnreadChannel(state, chan),
         ]));
@@ -244,7 +257,7 @@ export function emitLocalUserTypingEvent(channelId: string, parentPostId: string
             isPerformanceDebuggingEnabled(state) &&
             getBool(state, Preferences.CATEGORY_PERFORMANCE_DEBUGGING, Preferences.NAME_DISABLE_TYPING_MESSAGES)
         ) {
-            return {data: false};
+            return { data: false };
         }
 
         const t = Date.now();
@@ -260,7 +273,7 @@ export function emitLocalUserTypingEvent(channelId: string, parentPostId: string
             lastTimeTypingSent = t;
         }
 
-        return {data: true};
+        return { data: true };
     };
 
     return dispatch(userTyping);

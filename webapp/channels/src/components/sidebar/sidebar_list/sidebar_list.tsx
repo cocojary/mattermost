@@ -3,36 +3,37 @@
 
 import classNames from 'classnames';
 import debounce from 'lodash/debounce';
-import React, {lazy} from 'react';
-import {DragDropContext, Droppable} from 'react-beautiful-dnd';
-import type {DropResult, DragStart, BeforeCapture} from 'react-beautiful-dnd';
-import {FormattedMessage, injectIntl, type WrappedComponentProps} from 'react-intl';
-import {SpringSystem} from 'rebound';
-import type {Spring} from 'rebound';
+import React, { lazy } from 'react';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import type { DropResult, DragStart, BeforeCapture } from 'react-beautiful-dnd';
+import { FormattedMessage, injectIntl, type WrappedComponentProps } from 'react-intl';
+import { SpringSystem } from 'rebound';
+import type { Spring } from 'rebound';
 
-import type {ChannelCategory} from '@mattermost/types/channel_categories';
-import type {Channel} from '@mattermost/types/channels';
-import type {Team} from '@mattermost/types/teams';
+import type { ChannelCategory } from '@mattermost/types/channel_categories';
+import type { Channel } from '@mattermost/types/channels';
+import type { Team } from '@mattermost/types/teams';
 
-import {General} from 'mattermost-redux/constants';
+import { General } from 'mattermost-redux/constants';
 
-import {makeAsyncComponent} from 'components/async_load';
+import { makeAsyncComponent } from 'components/async_load';
 import Scrollbars from 'components/common/scrollbars';
 import SidebarCategory from 'components/sidebar/sidebar_category';
 
-import {findNextUnreadChannelId} from 'utils/channel_utils';
-import {Constants, DraggingStates, DraggingStateTypes} from 'utils/constants';
-import {isKeyPressed, cmdOrCtrlPressed} from 'utils/keyboard';
-import {mod} from 'utils/utils';
+import { findNextUnreadChannelId } from 'utils/channel_utils';
+import { Constants, DraggingStates, DraggingStateTypes } from 'utils/constants';
+import { isKeyPressed, cmdOrCtrlPressed } from 'utils/keyboard';
+import { mod } from 'utils/utils';
 
-import type {DraggingState} from 'types/store';
-import type {StaticPage} from 'types/store/lhs';
+import type { DraggingState } from 'types/store';
+import type { StaticPage } from 'types/store/lhs';
 
 const DraftsLink = makeAsyncComponent('DraftsLink', lazy(() => import('components/drafts/drafts_link/drafts_link')));
 const GlobalThreadsLink = makeAsyncComponent('GlobalThreadsLink', lazy(() => import('components/threading/global_threads_link')));
 const RecapsLink = makeAsyncComponent('RecapsLink', lazy(() => import('components/recaps_link')));
 const UnreadChannelIndicator = makeAsyncComponent('UnreadChannelIndicator', lazy(() => import('../unread_channel_indicator')));
 const UnreadChannels = makeAsyncComponent('UnreadChannels', lazy(() => import('../unread_channels')));
+const RecentlyViewedChannels = makeAsyncComponent('RecentlyViewedChannels', lazy(() => import('../recently_viewed_channels')));
 
 type Props = WrappedComponentProps & {
     currentTeam?: Team;
@@ -100,7 +101,7 @@ export class SidebarList extends React.PureComponent<Props, State> {
         this.animate = new SpringSystem();
         this.scrollAnimation = this.animate.createSpring();
         this.scrollAnimation.setOvershootClampingEnabled(true); // disables the spring action at the end of animation
-        this.scrollAnimation.addListener({onSpringUpdate: this.handleScrollAnimationUpdate});
+        this.scrollAnimation.addListener({ onSpringUpdate: this.handleScrollAnimationUpdate });
     }
 
     componentDidMount() {
@@ -120,7 +121,7 @@ export class SidebarList extends React.PureComponent<Props, State> {
 
         // reset the scrollbar upon switching teams
         if (this.props.currentTeam !== prevProps.currentTeam) {
-            this.scrollbar.current!.scrollTo({top: 0});
+            this.scrollbar.current!.scrollTo({ top: 0 });
         }
 
         // Scroll to selected channel so it's in view
@@ -162,7 +163,7 @@ export class SidebarList extends React.PureComponent<Props, State> {
 
     handleScrollAnimationUpdate = (spring: Spring) => {
         const val = spring.getCurrentValue();
-        this.scrollbar.current!.scrollTo?.({top: val});
+        this.scrollbar.current!.scrollTo?.({ top: val });
     };
 
     scrollToFirstUnreadChannel = () => {
@@ -394,13 +395,13 @@ export class SidebarList extends React.PureComponent<Props, State> {
     };
 
     onBeforeDragStart = () => {
-        this.props.actions.setDraggingState({state: DraggingStates.BEFORE});
+        this.props.actions.setDraggingState({ state: DraggingStates.BEFORE });
     };
 
     onDragStart = (initial: DragStart) => {
         this.props.onDragStart(initial);
 
-        this.props.actions.setDraggingState({state: DraggingStates.DURING});
+        this.props.actions.setDraggingState({ state: DraggingStates.DURING });
 
         // Re-enable scroll box resizing
         const droppable = [...document.querySelectorAll<HTMLDivElement>('[data-rbd-droppable-id*="droppable-categories"]')];
@@ -422,7 +423,7 @@ export class SidebarList extends React.PureComponent<Props, State> {
     };
 
     render() {
-        const {categories} = this.props;
+        const { categories } = this.props;
 
         let channelList: React.ReactNode;
         if (this.props.isUnreadFilterEnabled) {
@@ -470,6 +471,7 @@ export class SidebarList extends React.PureComponent<Props, State> {
                             }}
                         </Droppable>
                     </DragDropContext>
+                    <RecentlyViewedChannels />
                 </>
             );
         }
@@ -488,15 +490,15 @@ export class SidebarList extends React.PureComponent<Props, State> {
             />
         );
 
-        const ariaLabel = this.props.intl.formatMessage({id: 'accessibility.sections.lhsList', defaultMessage: 'channel sidebar region'});
+        const ariaLabel = this.props.intl.formatMessage({ id: 'accessibility.sections.lhsList', defaultMessage: 'channel sidebar region' });
 
         return (
 
             // NOTE: id attribute added to temporarily support the desktop app's at-mention DOM scraping of the old sidebar
             <>
-                <GlobalThreadsLink/>
-                <DraftsLink/>
-                <RecapsLink/>
+                <GlobalThreadsLink />
+                <DraftsLink />
+                <RecapsLink />
                 <div
                     id='sidebar-left'
                     role='application'

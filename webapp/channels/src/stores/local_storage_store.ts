@@ -1,18 +1,19 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {getRedirectChannelNameForTeam} from 'mattermost-redux/selectors/entities/channels';
+import { getRedirectChannelNameForTeam } from 'mattermost-redux/selectors/entities/channels';
 
-import {getBasePath} from 'selectors/general';
+import { getBasePath } from 'selectors/general';
 import store from 'stores/redux_store';
 
-import {PreviousViewedTypes} from 'utils/constants';
+import { PreviousViewedTypes } from 'utils/constants';
 
 const getPreviousTeamIdKey = (userId: string) => ['user_prev_team', userId].join(':');
 const getPreviousChannelNameKey = (userId: string | null, teamId: string) => ['user_team_prev_channel', userId, teamId].join(':');
 const getPreviousViewedTypeKey = (userId: string | null, teamId: string) => ['user_team_prev_viewed_type', userId, teamId].join(':');
 const getPenultimateViewedTypeKey = (userId: string, teamId: string) => ['user_team_penultimate_viewed_type', userId, teamId].join(':');
 export const getPenultimateChannelNameKey = (userId: string, teamId: string) => ['user_team_penultimate_channel', userId, teamId].join(':');
+const getRecentChannelsKey = (userId: string, teamId: string) => ['user_team_recent_channels', userId, teamId].join(':');
 const getRecentEmojisKey = (userId: string) => ['recent_emojis', userId].join(':');
 const getWasLoggedInKey = () => 'was_logged_in';
 const teamIdJoinedOnLoadKey = 'teamIdJoinedOnLoad';
@@ -116,6 +117,23 @@ class LocalStorageStoreClass {
     setPreviousTeamId(userId: string, teamId: string) {
         this.setItem(getPreviousTeamIdKey(userId), teamId);
     }
+
+    getRecentChannels(userId: string, teamId: string): string[] {
+        const recent = this.getItem(getRecentChannelsKey(userId, teamId));
+        if (recent) {
+            try {
+                return JSON.parse(recent);
+            } catch (e) {
+                // ignore parse error
+            }
+        }
+        return [];
+    }
+
+    setRecentChannels(userId: string, teamId: string, channelIds: string[]) {
+        this.setItem(getRecentChannelsKey(userId, teamId), JSON.stringify(channelIds));
+    }
+
 
     /**
      * Returns the list of recently used emojis for the user in string format.
