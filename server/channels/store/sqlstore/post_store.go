@@ -900,6 +900,9 @@ func (s *SqlPostStore) Get(rctx request.CTX, id string, opts model.GetPostsOptio
 			return nil, errors.Wrap(err, "failed to find Posts")
 		}
 
+		// Techzen: Add missing decryption
+		decryptPosts(posts)
+
 		var hasNext bool
 		if opts.PerPage != 0 {
 			if len(posts) == opts.PerPage+1 {
@@ -1447,6 +1450,12 @@ func (s *SqlPostStore) getPostsSinceCollapsedThreads(rctx request.CTX, options m
 	if err := s.GetReplica().SelectBuilder(&posts, query); err != nil {
 		return nil, errors.Wrapf(err, "failed to find Posts with channelId=%s", options.ChannelId)
 	}
+
+	// Techzen: Add missing decryption
+	for _, p := range posts {
+		decryptPost(&p.Post)
+	}
+
 	return s.prepareThreadedResponse(rctx, posts, options.CollapsedThreadsExtended, false, sanitizeOptions)
 }
 
@@ -1493,6 +1502,9 @@ func (s *SqlPostStore) GetPostsSince(rctx request.CTX, options model.GetPostsSin
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find Posts with channelId=%s", options.ChannelId)
 	}
+
+	// Techzen: Add missing decryption
+	decryptPosts(posts)
 
 	list := model.NewPostList()
 
@@ -1576,6 +1588,9 @@ func (s *SqlPostStore) GetPostsSinceForSync(options model.GetPostsSinceForSyncOp
 		return nil, cursor, errors.Wrapf(err, "error getting Posts with channelId=%s", options.ChannelId)
 	}
 
+	// Techzen: Add missing decryption
+	decryptPosts(posts)
+
 	if len(posts) != 0 {
 		if options.SinceCreateAt {
 			cursor.LastPostCreateAt = posts[len(posts)-1].CreateAt
@@ -1652,6 +1667,9 @@ func (s *SqlPostStore) GetPostsForReporting(rctx request.CTX, queryParams model.
 		return nil, errors.Wrap(err, "failed to get posts for reporting")
 	}
 
+	// Techzen: Add missing decryption
+	decryptPosts(posts)
+
 	// Determine if there are more pages and calculate next cursor
 	// We request perPage+1 to detect if more results exist:
 	// - If we get exactly perPage posts: no more results, nextCursor = nil
@@ -1707,6 +1725,9 @@ func (s *SqlPostStore) GetPostsByThread(threadId string, since int64) ([]*model.
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch thread posts")
 	}
+
+	// Techzen: Add missing decryption
+	decryptPosts(result)
 
 	return result, nil
 }
@@ -1771,6 +1792,11 @@ func (s *SqlPostStore) getPostsAround(rctx request.CTX, before bool, options mod
 		return nil, errors.Wrapf(err, "failed to find Posts with channelId=%s", options.ChannelId)
 	}
 
+	// Techzen: Add missing decryption
+	for _, p := range posts {
+		decryptPost(&p.Post)
+	}
+
 	if !options.CollapsedThreads && len(posts) > 0 {
 		rootIds := []string{}
 		for _, post := range posts {
@@ -1802,6 +1828,9 @@ func (s *SqlPostStore) getPostsAround(rctx request.CTX, before bool, options mod
 		if err := s.GetReplica().SelectBuilder(&parents, rootQuery); err != nil {
 			return nil, errors.Wrapf(err, "failed to find Posts with channelId=%s", options.ChannelId)
 		}
+
+		// Techzen: Add missing decryption
+		decryptPosts(parents)
 	}
 
 	list, err := s.prepareThreadedResponse(rctx, posts, options.CollapsedThreadsExtended, !before, sanitizeOptions)
@@ -1905,6 +1934,10 @@ func (s *SqlPostStore) getRootPosts(channelId string, offset int, limit int, ski
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find Posts")
 	}
+
+	// Techzen: Add missing decryption
+	decryptPosts(posts)
+
 	return posts, nil
 }
 
@@ -1953,6 +1986,10 @@ func (s *SqlPostStore) getParentsPosts(channelId string, offset int, limit int, 
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find Posts with channelId=%s", channelId)
 	}
+
+	// Techzen: Add missing decryption
+	decryptPosts(posts)
+
 	return posts, nil
 }
 
