@@ -167,3 +167,4 @@ docker-compose.override.yaml
 .env.local
 .env.prod.example
 .env.local
+.env.local
