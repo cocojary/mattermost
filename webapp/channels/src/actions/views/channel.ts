@@ -1,13 +1,13 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import type {AnyAction} from 'redux';
-import {batchActions} from 'redux-batched-actions';
+import type { AnyAction } from 'redux';
+import { batchActions } from 'redux-batched-actions';
 
-import type {UserAutocomplete} from '@mattermost/types/autocomplete';
-import type {Channel} from '@mattermost/types/channels';
+import type { UserAutocomplete } from '@mattermost/types/autocomplete';
+import type { Channel } from '@mattermost/types/channels';
 
-import {TeamTypes} from 'mattermost-redux/action_types';
+import { TeamTypes } from 'mattermost-redux/action_types';
 import {
     leaveChannel as leaveChannelRedux,
     joinChannel,
@@ -17,9 +17,9 @@ import {
     getChannel as loadChannel,
 } from 'mattermost-redux/actions/channels';
 import * as PostActions from 'mattermost-redux/actions/posts';
-import {selectTeam} from 'mattermost-redux/actions/teams';
-import {autocompleteUsers} from 'mattermost-redux/actions/users';
-import {Posts, RequestStatus} from 'mattermost-redux/constants';
+import { selectTeam } from 'mattermost-redux/actions/teams';
+import { autocompleteUsers } from 'mattermost-redux/actions/users';
+import { Posts, RequestStatus } from 'mattermost-redux/constants';
 import {
     getChannel,
     getChannelsNameMapInCurrentTeam,
@@ -32,7 +32,7 @@ import {
     isManuallyUnread,
     getCurrentChannelId,
 } from 'mattermost-redux/selectors/entities/channels';
-import {getMostRecentPostIdInChannel, getPost} from 'mattermost-redux/selectors/entities/posts';
+import { getMostRecentPostIdInChannel, getPost } from 'mattermost-redux/selectors/entities/posts';
 import {
     getCurrentRelativeTeamUrl,
     getCurrentTeam,
@@ -40,28 +40,29 @@ import {
     getRelativeTeamUrl,
     getTeamsList,
 } from 'mattermost-redux/selectors/entities/teams';
-import {getCurrentUserId, getUserByUsername} from 'mattermost-redux/selectors/entities/users';
-import {makeAddLastViewAtToProfiles} from 'mattermost-redux/selectors/entities/utils';
-import {getChannelByName} from 'mattermost-redux/utils/channel_utils';
+import { getCurrentUserId, getUserByUsername } from 'mattermost-redux/selectors/entities/users';
+import { makeAddLastViewAtToProfiles } from 'mattermost-redux/selectors/entities/utils';
+import { getChannelByName } from 'mattermost-redux/utils/channel_utils';
 import EventEmitter from 'mattermost-redux/utils/event_emitter';
 
-import {openDirectChannelToUserId} from 'actions/channel_actions';
-import {loadCustomStatusEmojisForPostList} from 'actions/emoji_actions';
-import {closeRightHandSide} from 'actions/views/rhs';
-import {markThreadAsRead} from 'actions/views/threads';
-import {getLastViewedChannelName} from 'selectors/local_storage';
-import {getSelectedPost, getSelectedPostId} from 'selectors/rhs';
-import {getLastPostsApiTimeForChannel} from 'selectors/views/channel';
-import {getSelectedThreadIdInCurrentTeam} from 'selectors/views/threads';
-import {getSocketStatus} from 'selectors/views/websocket';
+import { openDirectChannelToUserId } from 'actions/channel_actions';
+import { loadCustomStatusEmojisForPostList } from 'actions/emoji_actions';
+import { closeRightHandSide } from 'actions/views/rhs';
+import { markThreadAsRead } from 'actions/views/threads';
+import { updateRecentlyViewedChannels } from 'actions/views/channel_sidebar';
+import { getLastViewedChannelName } from 'selectors/local_storage';
+import { getSelectedPost, getSelectedPostId } from 'selectors/rhs';
+import { getLastPostsApiTimeForChannel } from 'selectors/views/channel';
+import { getSelectedThreadIdInCurrentTeam } from 'selectors/views/threads';
+import { getSocketStatus } from 'selectors/views/websocket';
 import LocalStorageStore from 'stores/local_storage_store';
 
-import {getHistory} from 'utils/browser_history';
-import {isArchivedChannel} from 'utils/channel_utils';
-import {Constants, ActionTypes, EventTypes, PostRequestTypes} from 'utils/constants';
-import {stopTryNotificationRing} from 'utils/notification_sounds';
+import { getHistory } from 'utils/browser_history';
+import { isArchivedChannel } from 'utils/channel_utils';
+import { Constants, ActionTypes, EventTypes, PostRequestTypes } from 'utils/constants';
+import { stopTryNotificationRing } from 'utils/notification_sounds';
 
-import type {ActionFuncAsync, ThunkActionFunc} from 'types/store';
+import type { ActionFuncAsync, ThunkActionFunc } from 'types/store';
 
 export function goToLastViewedChannel(): ActionFuncAsync {
     return async (dispatch, getState) => {
@@ -86,9 +87,10 @@ export function switchToChannelById(channelId: string): ActionFuncAsync {
         const state = getState();
         const channel = getChannel(state, channelId);
         if (channel) {
+            dispatch(updateRecentlyViewedChannels(channelId));
             return dispatch(switchToChannel(channel));
         }
-        return {data: true};
+        return { data: true };
     };
 }
 
@@ -104,7 +106,7 @@ export function loadIfNecessaryAndSwitchToChannelById(channelId: string): Action
     };
 }
 
-export function switchToChannel(channel: Channel & {userId?: string}): ActionFuncAsync {
+export function switchToChannel(channel: Channel & { userId?: string }): ActionFuncAsync {
     return async (dispatch, getState) => {
         const state = getState();
         const selectedTeamId = channel.team_id;
@@ -114,18 +116,18 @@ export function switchToChannel(channel: Channel & {userId?: string}): ActionFun
             const username = channel.userId ? channel.name : channel.display_name;
             const user = getUserByUsername(state, username);
             if (!user) {
-                return {error: true};
+                return { error: true };
             }
 
             const direct = await dispatch(openDirectChannelToUserId(user.id));
             if (direct.error) {
-                return {error: true};
+                return { error: true };
             }
             getHistory().push(`${teamUrl}/messages/@${channel.name}`);
         } else if (channel.type === Constants.GM_CHANNEL) {
             const gmChannel = getChannel(state, channel.id);
             if (!gmChannel?.name) {
-                return {error: true};
+                return { error: true };
             }
             getHistory().push(`${teamUrl}/channels/${gmChannel.name}`);
         } else if (channel.type === Constants.THREADS) {
@@ -134,7 +136,7 @@ export function switchToChannel(channel: Channel & {userId?: string}): ActionFun
             getHistory().push(`${teamUrl}/channels/${channel.name}`);
         }
 
-        return {data: true};
+        return { data: true };
     };
 }
 
@@ -154,7 +156,7 @@ export function leaveChannel(channelId: string): ActionFuncAsync {
         const currentUserId = getCurrentUserId(state);
         const currentTeam = getCurrentTeam(state);
         if (!currentTeam) {
-            return {data: false};
+            return { data: false };
         }
         const channel = getChannel(state, channelId);
         const currentChannelId = getCurrentChannelId(state);
@@ -168,9 +170,9 @@ export function leaveChannel(channelId: string): ActionFuncAsync {
         if (!isArchivedChannel(channel)) {
             LocalStorageStore.removePreviousChannel(currentUserId, currentTeam.id, state);
         }
-        const {error} = await dispatch(leaveChannelRedux(channelId));
+        const { error } = await dispatch(leaveChannelRedux(channelId));
         if (error) {
-            return {error};
+            return { error };
         }
         state = getState();
 
@@ -189,7 +191,7 @@ export function leaveChannel(channelId: string): ActionFuncAsync {
         if (getMyChannels(getState()).filter((c) => c.type === Constants.OPEN_CHANNEL || c.type === Constants.PRIVATE_CHANNEL).length === 0) {
             LocalStorageStore.removePreviousChannel(currentUserId, currentTeam.id, state);
             dispatch(selectTeam(''));
-            dispatch({type: TeamTypes.LEAVE_TEAM, data: currentTeam});
+            dispatch({ type: TeamTypes.LEAVE_TEAM, data: currentTeam });
             getHistory().push('/');
         } else if (channelId === currentChannelId) {
             // We only need to leave the channel if we are in the channel
@@ -246,7 +248,7 @@ export function autocompleteUsersInChannel(prefix: string, channelId: string): A
     };
 }
 
-export function loadUnreads(channelId: string, prefetch = false): ActionFuncAsync<{atLatestMessage: boolean; atOldestMessage: boolean}> {
+export function loadUnreads(channelId: string, prefetch = false): ActionFuncAsync<{ atLatestMessage: boolean; atOldestMessage: boolean }> {
     return async (dispatch) => {
         const time = Date.now();
         if (prefetch) {
@@ -256,7 +258,7 @@ export function loadUnreads(channelId: string, prefetch = false): ActionFuncAsyn
                 status: RequestStatus.STARTED,
             });
         }
-        const {data, error} = await dispatch(PostActions.getPostsUnread(channelId));
+        const { data, error } = await dispatch(PostActions.getPostsUnread(channelId));
         if (error) {
             if (prefetch) {
                 dispatch({
@@ -306,7 +308,7 @@ export function loadUnreads(channelId: string, prefetch = false): ActionFuncAsyn
 
 export function loadPostsAround(channelId: string, focusedPostId: string): ActionFuncAsync {
     return async (dispatch) => {
-        const {data, error} = await dispatch(PostActions.getPostsAround(channelId, focusedPostId, Posts.POST_CHUNK_SIZE / 2));
+        const { data, error } = await dispatch(PostActions.getPostsAround(channelId, focusedPostId, Posts.POST_CHUNK_SIZE / 2));
         if (error) {
             return {
                 error,
@@ -330,7 +332,7 @@ export function loadPostsAround(channelId: string, focusedPostId: string): Actio
 export function loadLatestPosts(channelId: string): ActionFuncAsync {
     return async (dispatch) => {
         const time = Date.now();
-        const {data, error} = await dispatch(PostActions.getPosts(channelId, 0, Posts.POST_CHUNK_SIZE / 2));
+        const { data, error } = await dispatch(PostActions.getPosts(channelId, 0, Posts.POST_CHUNK_SIZE / 2));
 
         if (error) {
             return {
@@ -390,7 +392,7 @@ export function loadPosts({
             result = await dispatch(PostActions.getPostsAfter(channelId, postId, page, perPage));
         }
 
-        const {data} = result;
+        const { data } = result;
 
         const actions: AnyAction[] = [{
             type: ActionTypes.LOADING_POSTS,
@@ -441,7 +443,7 @@ export function syncPostsInChannel(channelId: string, since: number, prefetch = 
             });
         }
 
-        const {data, error} = await dispatch(PostActions.getPostsSince(channelId, sinceTimeToGetPosts));
+        const { data, error } = await dispatch(PostActions.getPostsSince(channelId, sinceTimeToGetPosts));
         if (data) {
             actions.push({
                 type: ActionTypes.RECEIVED_POSTS_FOR_CHANNEL_AT_TIME,
@@ -468,7 +470,7 @@ export function syncPostsInChannel(channelId: string, since: number, prefetch = 
 
         dispatch(batchActions(actions));
 
-        return {data, error};
+        return { data, error };
     };
 }
 
@@ -531,13 +533,13 @@ export function deleteChannel(channelId: string): ActionFuncAsync<boolean> {
 
         // Validate channel ID
         if (!channel || channel.id.length !== Constants.CHANNEL_ID_LENGTH) {
-            return {data: false};
+            return { data: false };
         }
 
         // Call the delete channel action
         const res = await dispatch(deleteChannelRedux(channelId));
         if (res.error) {
-            return {data: false};
+            return { data: false };
         }
 
         // Handle RHS state
@@ -551,6 +553,6 @@ export function deleteChannel(channelId: string): ActionFuncAsync<boolean> {
         // Stop notification sounds
         stopTryNotificationRing();
 
-        return {data: true};
+        return { data: true };
     };
 }

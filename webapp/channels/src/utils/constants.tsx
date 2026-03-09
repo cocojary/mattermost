@@ -7,11 +7,11 @@ import solarizedDarkCSS from 'highlight.js/styles/base16/solarized-dark.css';
 import solarizedLightCSS from 'highlight.js/styles/base16/solarized-light.css';
 import githubCSS from 'highlight.js/styles/github.css';
 import monokaiCSS from 'highlight.js/styles/monokai.css';
-import {defineMessage, defineMessages} from 'react-intl';
+import { defineMessage, defineMessages } from 'react-intl';
 
-import {CustomStatusDuration} from '@mattermost/types/users';
+import { CustomStatusDuration } from '@mattermost/types/users';
 
-import {Preferences as ReduxPreferences} from 'mattermost-redux/constants';
+import { Preferences as ReduxPreferences } from 'mattermost-redux/constants';
 import Permissions from 'mattermost-redux/constants/permissions';
 import keyMirror from 'mattermost-redux/utils/key_mirror';
 import * as PostListUtils from 'mattermost-redux/utils/post_list';
@@ -309,6 +309,8 @@ export const ActionTypes = keyMirror({
     MULTISELECT_CHANNEL_TO: null,
     MULTISELECT_CHANNEL_CLEAR: null,
 
+    UPDATE_RECENTLY_VIEWED_CHANNELS: null,
+
     TRACK_ANNOUNCEMENT_BAR: null,
     DISMISS_ANNOUNCEMENT_BAR: null,
 
@@ -561,15 +563,15 @@ export enum LicenseSkus {
 
 export function getLicenseTier(licenseSku: string): number {
     switch (licenseSku) {
-    case LicenseSkus.Professional:
-        return 10;
-    case LicenseSkus.Enterprise:
-        return 20;
-    case LicenseSkus.Entry:
-    case LicenseSkus.EnterpriseAdvanced:
-        return 30;
-    default:
-        return 0;
+        case LicenseSkus.Professional:
+            return 10;
+        case LicenseSkus.Enterprise:
+            return 20;
+        case LicenseSkus.Entry:
+        case LicenseSkus.EnterpriseAdvanced:
+            return 30;
+        default:
+            return 0;
     }
 }
 
@@ -1879,70 +1881,70 @@ export const Constants = {
     } as Record<string, [string, number]>),
     CODE_PREVIEW_MAX_FILE_SIZE: 500000, // 500 KB
     HighlightedLanguages: {
-        '1c': {name: '1C:Enterprise', extensions: ['bsl', 'os'], aliases: ['bsl']},
-        actionscript: {name: 'ActionScript', extensions: ['as'], aliases: ['as', 'as3']},
-        applescript: {name: 'AppleScript', extensions: ['applescript', 'osascript', 'scpt'], aliases: ['osascript']},
-        bash: {name: 'Bash', extensions: ['sh'], aliases: ['sh', 'zsh']},
-        clojure: {name: 'Clojure', extensions: ['clj', 'boot', 'cl2', 'cljc', 'cljs', 'cljs.hl', 'cljscm', 'cljx', 'hic'], aliases: ['clj']},
-        coffeescript: {name: 'CoffeeScript', extensions: ['coffee', '_coffee', 'cake', 'cjsx', 'cson', 'iced'], aliases: ['coffee', 'coffee-script']},
-        cpp: {name: 'C/C++', extensions: ['cpp', 'c', 'cc', 'h', 'c++', 'h++', 'hpp'], aliases: ['c++', 'c']},
-        csharp: {name: 'C#', extensions: ['cs', 'csharp'], aliases: ['c#', 'cs', 'csharp']},
-        css: {name: 'CSS', extensions: ['css']},
-        d: {name: 'D', extensions: ['d', 'di'], aliases: ['dlang']},
-        dart: {name: 'Dart', extensions: ['dart']},
-        delphi: {name: 'Delphi', extensions: ['delphi', 'dpr', 'dfm', 'pas', 'pascal', 'freepascal', 'lazarus', 'lpr', 'lfm'], aliases: ['pas', 'pascal']},
-        diff: {name: 'Diff', extensions: ['diff', 'patch'], aliases: ['patch', 'udiff']},
-        django: {name: 'Django', extensions: ['django', 'jinja'], aliases: ['jinja']},
-        dockerfile: {name: 'Dockerfile', extensions: ['dockerfile', 'docker'], aliases: ['docker']},
-        elixir: {name: 'Elixir', extensions: ['ex', 'exs'], aliases: ['ex', 'exs']},
-        erlang: {name: 'Erlang', extensions: ['erl'], aliases: ['erl']},
-        fortran: {name: 'Fortran', extensions: ['f90', 'f95'], aliases: ['f90', 'f95']},
-        fsharp: {name: 'F#', extensions: ['fsharp', 'fs'], aliases: ['fs']},
-        gcode: {name: 'G-Code', extensions: ['gcode', 'nc']},
-        go: {name: 'Go', extensions: ['go'], aliases: ['golang']},
-        groovy: {name: 'Groovy', extensions: ['groovy']},
-        handlebars: {name: 'Handlebars', extensions: ['handlebars', 'hbs', 'html.hbs', 'html.handlebars'], aliases: ['hbs', 'mustache']},
-        haskell: {name: 'Haskell', extensions: ['hs'], aliases: ['hs']},
-        haxe: {name: 'Haxe', extensions: ['hx'], aliases: ['hx']},
-        java: {name: 'Java', extensions: ['java', 'jsp']},
-        javascript: {name: 'JavaScript', extensions: ['js', 'jsx'], aliases: ['js']},
-        json: {name: 'JSON', extensions: ['json']},
-        julia: {name: 'Julia', extensions: ['jl'], aliases: ['jl']},
-        kotlin: {name: 'Kotlin', extensions: ['kt', 'ktm', 'kts'], aliases: ['kt']},
-        latex: {name: 'LaTeX', extensions: ['tex'], aliases: ['tex']},
-        less: {name: 'Less', extensions: ['less']},
-        lisp: {name: 'Lisp', extensions: ['lisp']},
-        lua: {name: 'Lua', extensions: ['lua']},
-        makefile: {name: 'Makefile', extensions: ['mk', 'mak'], aliases: ['make', 'mf', 'gnumake', 'bsdmake', 'mk']},
-        markdown: {name: 'Markdown', extensions: ['md', 'mkdown', 'mkd'], aliases: ['md', 'mkd']},
-        matlab: {name: 'Matlab', extensions: ['matlab', 'm'], aliases: ['m']},
-        objectivec: {name: 'Objective C', extensions: ['mm', 'objc', 'obj-c'], aliases: ['objective_c', 'objc']},
-        ocaml: {name: 'OCaml', extensions: ['ml'], aliases: ['ml']},
-        perl: {name: 'Perl', extensions: ['perl', 'pl'], aliases: ['pl']},
-        pgsql: {name: 'PostgreSQL', extensions: ['pgsql', 'postgres', 'postgresql'], aliases: ['postgres', 'postgresql']},
-        php: {name: 'PHP', extensions: ['php', 'php3', 'php4', 'php5', 'php6'], aliases: ['php3', 'php4', 'php5', 'php6']},
-        powershell: {name: 'PowerShell', extensions: ['ps', 'ps1'], aliases: ['posh']},
-        puppet: {name: 'Puppet', extensions: ['pp'], aliases: ['pp']},
-        python: {name: 'Python', extensions: ['py', 'gyp'], aliases: ['py']},
-        r: {name: 'R', extensions: ['r'], aliases: ['r', 's']},
-        ruby: {name: 'Ruby', extensions: ['ruby', 'rb', 'gemspec', 'podspec', 'thor', 'irb'], aliases: ['rb']},
-        rust: {name: 'Rust', extensions: ['rs'], aliases: ['rs']},
-        scala: {name: 'Scala', extensions: ['scala']},
-        scheme: {name: 'Scheme', extensions: ['scm', 'sld'], aliases: ['scm']},
-        scss: {name: 'SCSS', extensions: ['scss']},
-        smalltalk: {name: 'Smalltalk', extensions: ['st'], aliases: ['st', 'squeak']},
-        sql: {name: 'SQL', extensions: ['sql']},
-        stylus: {name: 'Stylus', extensions: ['styl'], aliases: ['styl']},
-        swift: {name: 'Swift', extensions: ['swift']},
-        text: {name: 'Text', extensions: ['txt', 'log'], aliases: ['txt']},
-        typescript: {name: 'TypeScript', extensions: ['ts', 'tsx'], aliases: ['ts', 'tsx']},
-        vbnet: {name: 'VB.Net', extensions: ['vbnet', 'vb', 'bas'], aliases: ['vb', 'visualbasic']},
-        vbscript: {name: 'VBScript', extensions: ['vbs'], aliases: ['vbs']},
-        verilog: {name: 'Verilog', extensions: ['v', 'veo', 'sv', 'svh']},
-        vhdl: {name: 'VHDL', extensions: ['vhd', 'vhdl'], aliases: ['vhd']},
-        vtt: {name: 'WebVTT', extensions: ['vtt'], aliases: ['vtt', 'webvtt']},
-        xml: {name: 'HTML, XML', extensions: ['xml', 'html', 'xhtml', 'rss', 'atom', 'xsl', 'plist']},
-        yaml: {name: 'YAML', extensions: ['yaml'], aliases: ['yml']},
+        '1c': { name: '1C:Enterprise', extensions: ['bsl', 'os'], aliases: ['bsl'] },
+        actionscript: { name: 'ActionScript', extensions: ['as'], aliases: ['as', 'as3'] },
+        applescript: { name: 'AppleScript', extensions: ['applescript', 'osascript', 'scpt'], aliases: ['osascript'] },
+        bash: { name: 'Bash', extensions: ['sh'], aliases: ['sh', 'zsh'] },
+        clojure: { name: 'Clojure', extensions: ['clj', 'boot', 'cl2', 'cljc', 'cljs', 'cljs.hl', 'cljscm', 'cljx', 'hic'], aliases: ['clj'] },
+        coffeescript: { name: 'CoffeeScript', extensions: ['coffee', '_coffee', 'cake', 'cjsx', 'cson', 'iced'], aliases: ['coffee', 'coffee-script'] },
+        cpp: { name: 'C/C++', extensions: ['cpp', 'c', 'cc', 'h', 'c++', 'h++', 'hpp'], aliases: ['c++', 'c'] },
+        csharp: { name: 'C#', extensions: ['cs', 'csharp'], aliases: ['c#', 'cs', 'csharp'] },
+        css: { name: 'CSS', extensions: ['css'] },
+        d: { name: 'D', extensions: ['d', 'di'], aliases: ['dlang'] },
+        dart: { name: 'Dart', extensions: ['dart'] },
+        delphi: { name: 'Delphi', extensions: ['delphi', 'dpr', 'dfm', 'pas', 'pascal', 'freepascal', 'lazarus', 'lpr', 'lfm'], aliases: ['pas', 'pascal'] },
+        diff: { name: 'Diff', extensions: ['diff', 'patch'], aliases: ['patch', 'udiff'] },
+        django: { name: 'Django', extensions: ['django', 'jinja'], aliases: ['jinja'] },
+        dockerfile: { name: 'Dockerfile', extensions: ['dockerfile', 'docker'], aliases: ['docker'] },
+        elixir: { name: 'Elixir', extensions: ['ex', 'exs'], aliases: ['ex', 'exs'] },
+        erlang: { name: 'Erlang', extensions: ['erl'], aliases: ['erl'] },
+        fortran: { name: 'Fortran', extensions: ['f90', 'f95'], aliases: ['f90', 'f95'] },
+        fsharp: { name: 'F#', extensions: ['fsharp', 'fs'], aliases: ['fs'] },
+        gcode: { name: 'G-Code', extensions: ['gcode', 'nc'] },
+        go: { name: 'Go', extensions: ['go'], aliases: ['golang'] },
+        groovy: { name: 'Groovy', extensions: ['groovy'] },
+        handlebars: { name: 'Handlebars', extensions: ['handlebars', 'hbs', 'html.hbs', 'html.handlebars'], aliases: ['hbs', 'mustache'] },
+        haskell: { name: 'Haskell', extensions: ['hs'], aliases: ['hs'] },
+        haxe: { name: 'Haxe', extensions: ['hx'], aliases: ['hx'] },
+        java: { name: 'Java', extensions: ['java', 'jsp'] },
+        javascript: { name: 'JavaScript', extensions: ['js', 'jsx'], aliases: ['js'] },
+        json: { name: 'JSON', extensions: ['json'] },
+        julia: { name: 'Julia', extensions: ['jl'], aliases: ['jl'] },
+        kotlin: { name: 'Kotlin', extensions: ['kt', 'ktm', 'kts'], aliases: ['kt'] },
+        latex: { name: 'LaTeX', extensions: ['tex'], aliases: ['tex'] },
+        less: { name: 'Less', extensions: ['less'] },
+        lisp: { name: 'Lisp', extensions: ['lisp'] },
+        lua: { name: 'Lua', extensions: ['lua'] },
+        makefile: { name: 'Makefile', extensions: ['mk', 'mak'], aliases: ['make', 'mf', 'gnumake', 'bsdmake', 'mk'] },
+        markdown: { name: 'Markdown', extensions: ['md', 'mkdown', 'mkd'], aliases: ['md', 'mkd'] },
+        matlab: { name: 'Matlab', extensions: ['matlab', 'm'], aliases: ['m'] },
+        objectivec: { name: 'Objective C', extensions: ['mm', 'objc', 'obj-c'], aliases: ['objective_c', 'objc'] },
+        ocaml: { name: 'OCaml', extensions: ['ml'], aliases: ['ml'] },
+        perl: { name: 'Perl', extensions: ['perl', 'pl'], aliases: ['pl'] },
+        pgsql: { name: 'PostgreSQL', extensions: ['pgsql', 'postgres', 'postgresql'], aliases: ['postgres', 'postgresql'] },
+        php: { name: 'PHP', extensions: ['php', 'php3', 'php4', 'php5', 'php6'], aliases: ['php3', 'php4', 'php5', 'php6'] },
+        powershell: { name: 'PowerShell', extensions: ['ps', 'ps1'], aliases: ['posh'] },
+        puppet: { name: 'Puppet', extensions: ['pp'], aliases: ['pp'] },
+        python: { name: 'Python', extensions: ['py', 'gyp'], aliases: ['py'] },
+        r: { name: 'R', extensions: ['r'], aliases: ['r', 's'] },
+        ruby: { name: 'Ruby', extensions: ['ruby', 'rb', 'gemspec', 'podspec', 'thor', 'irb'], aliases: ['rb'] },
+        rust: { name: 'Rust', extensions: ['rs'], aliases: ['rs'] },
+        scala: { name: 'Scala', extensions: ['scala'] },
+        scheme: { name: 'Scheme', extensions: ['scm', 'sld'], aliases: ['scm'] },
+        scss: { name: 'SCSS', extensions: ['scss'] },
+        smalltalk: { name: 'Smalltalk', extensions: ['st'], aliases: ['st', 'squeak'] },
+        sql: { name: 'SQL', extensions: ['sql'] },
+        stylus: { name: 'Stylus', extensions: ['styl'], aliases: ['styl'] },
+        swift: { name: 'Swift', extensions: ['swift'] },
+        text: { name: 'Text', extensions: ['txt', 'log'], aliases: ['txt'] },
+        typescript: { name: 'TypeScript', extensions: ['ts', 'tsx'], aliases: ['ts', 'tsx'] },
+        vbnet: { name: 'VB.Net', extensions: ['vbnet', 'vb', 'bas'], aliases: ['vb', 'visualbasic'] },
+        vbscript: { name: 'VBScript', extensions: ['vbs'], aliases: ['vbs'] },
+        verilog: { name: 'Verilog', extensions: ['v', 'veo', 'sv', 'svh'] },
+        vhdl: { name: 'VHDL', extensions: ['vhd', 'vhdl'], aliases: ['vhd'] },
+        vtt: { name: 'WebVTT', extensions: ['vtt'], aliases: ['vtt', 'webvtt'] },
+        xml: { name: 'HTML, XML', extensions: ['xml', 'html', 'xhtml', 'rss', 'atom', 'xsl', 'plist'] },
+        yaml: { name: 'YAML', extensions: ['yaml'], aliases: ['yml'] },
     },
     PostsViewJumpTypes: {
         BOTTOM: 1,
@@ -2093,23 +2095,23 @@ export const WindowSizes = {
 
 export const AcceptedProfileImageTypes = ['image/jpeg', 'image/png', 'image/bmp'];
 
-export const searchHintOptions = [{searchTerm: 'From:', message: defineMessage({id: 'search_list_option.from', defaultMessage: 'Messages from a user'})},
-    {searchTerm: 'In:', message: defineMessage({id: 'search_list_option.in', defaultMessage: 'Messages in a channel'})},
-    {searchTerm: 'On:', message: defineMessage({id: 'search_list_option.on', defaultMessage: 'Messages on a date'})},
-    {searchTerm: 'Before:', message: defineMessage({id: 'search_list_option.before', defaultMessage: 'Messages before a date'})},
-    {searchTerm: 'After:', message: defineMessage({id: 'search_list_option.after', defaultMessage: 'Messages after a date'})},
-    {searchTerm: '-', message: defineMessage({id: 'search_list_option.exclude', defaultMessage: 'Exclude search terms'}), additionalDisplay: '—'},
-    {searchTerm: '""', message: defineMessage({id: 'search_list_option.phrases', defaultMessage: 'Messages with phrases'})},
+export const searchHintOptions = [{ searchTerm: 'From:', message: defineMessage({ id: 'search_list_option.from', defaultMessage: 'Messages from a user' }) },
+{ searchTerm: 'In:', message: defineMessage({ id: 'search_list_option.in', defaultMessage: 'Messages in a channel' }) },
+{ searchTerm: 'On:', message: defineMessage({ id: 'search_list_option.on', defaultMessage: 'Messages on a date' }) },
+{ searchTerm: 'Before:', message: defineMessage({ id: 'search_list_option.before', defaultMessage: 'Messages before a date' }) },
+{ searchTerm: 'After:', message: defineMessage({ id: 'search_list_option.after', defaultMessage: 'Messages after a date' }) },
+{ searchTerm: '-', message: defineMessage({ id: 'search_list_option.exclude', defaultMessage: 'Exclude search terms' }), additionalDisplay: '—' },
+{ searchTerm: '""', message: defineMessage({ id: 'search_list_option.phrases', defaultMessage: 'Messages with phrases' }) },
 ];
 
-export const searchFilesHintOptions = [{searchTerm: 'From:', message: defineMessage({id: 'search_files_list_option.from', defaultMessage: 'Files from a user'})},
-    {searchTerm: 'In:', message: defineMessage({id: 'search_files_list_option.in', defaultMessage: 'Files in a channel'})},
-    {searchTerm: 'On:', message: defineMessage({id: 'search_files_list_option.on', defaultMessage: 'Files on a date'})},
-    {searchTerm: 'Before:', message: defineMessage({id: 'search_files_list_option.before', defaultMessage: 'Files before a date'})},
-    {searchTerm: 'After:', message: defineMessage({id: 'search_files_list_option.after', defaultMessage: 'Files after a date'})},
-    {searchTerm: 'Ext:', message: defineMessage({id: 'search_files_list_option.ext', defaultMessage: 'Files with an extension'})},
-    {searchTerm: '-', message: defineMessage({id: 'search_files_list_option.exclude', defaultMessage: 'Exclude search terms'}), additionalDisplay: '—'},
-    {searchTerm: '""', message: defineMessage({id: 'search_files_list_option.phrases', defaultMessage: 'Files with phrases'})},
+export const searchFilesHintOptions = [{ searchTerm: 'From:', message: defineMessage({ id: 'search_files_list_option.from', defaultMessage: 'Files from a user' }) },
+{ searchTerm: 'In:', message: defineMessage({ id: 'search_files_list_option.in', defaultMessage: 'Files in a channel' }) },
+{ searchTerm: 'On:', message: defineMessage({ id: 'search_files_list_option.on', defaultMessage: 'Files on a date' }) },
+{ searchTerm: 'Before:', message: defineMessage({ id: 'search_files_list_option.before', defaultMessage: 'Files before a date' }) },
+{ searchTerm: 'After:', message: defineMessage({ id: 'search_files_list_option.after', defaultMessage: 'Files after a date' }) },
+{ searchTerm: 'Ext:', message: defineMessage({ id: 'search_files_list_option.ext', defaultMessage: 'Files with an extension' }) },
+{ searchTerm: '-', message: defineMessage({ id: 'search_files_list_option.exclude', defaultMessage: 'Exclude search terms' }), additionalDisplay: '—' },
+{ searchTerm: '""', message: defineMessage({ id: 'search_files_list_option.phrases', defaultMessage: 'Files with phrases' }) },
 ];
 
 const {

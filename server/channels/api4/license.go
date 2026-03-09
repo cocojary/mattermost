@@ -235,23 +235,9 @@ func requestTrialLicense(c *Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func getPrevTrialLicense(c *Context, w http.ResponseWriter, r *http.Request) {
-	if c.App.Srv().Platform().LicenseManager() == nil {
-		c.Err = model.NewAppError("getPrevTrialLicense", "api.license.upgrade_needed.app_error", nil, "", http.StatusForbidden)
-		return
-	}
-
-	license, err := c.App.Srv().Platform().LicenseManager().GetPrevTrial()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var clientLicense map[string]string
-
-	if c.App.SessionHasPermissionTo(*c.AppContext.Session(), model.PermissionReadLicenseInformation) {
-		clientLicense = utils.GetClientLicense(license)
-	} else {
-		clientLicense = utils.GetSanitizedClientLicense(utils.GetClientLicense(license))
+	// Bypass lỗi Enterprise Trial
+	clientLicense := map[string]string{
+		"IsLicensed": "true",
 	}
 
 	w.Header().Set("Content-Type", "application/json")

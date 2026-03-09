@@ -164,3 +164,7 @@ docker-compose.override.yaml
 **/CLAUDE.md
 .cursorrules
 .cursor/
+.env.local
+.env.prod.example
+.env.local
+.env.local

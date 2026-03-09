@@ -1,65 +1,77 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ============================================================
-# Deploy Script - Chạy trên VPS bởi GitHub Actions
-# Yêu cầu env:
-#   DEPLOY_PATH   - đường dẫn thư mục deploy (vd: /opt/mattermost)
-#   COMPOSE_FILE  - tên file docker-compose (vd: docker-compose.prod.yml)
-#   MM_IMAGE      - image GHCR (vd: ghcr.io/cocojary/mattermost:latest)
+# deploy.sh — Deploy Mattermost tu source (Git-based)
+#
+# Flow CI:
+#   1. CI build webapp → SCP webapp-dist.tar.gz len /tmp/
+#   2. VPS: git pull → giai nen webapp → docker compose build (Go only)
+#
+# Su dung:
+#   bash scripts/deploy.sh
 # ============================================================
-
 set -euo pipefail
 
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-CYAN='\033[0;36m'; NC='\033[0m'
-
-log_info()    { echo -e "${CYAN}[$(date '+%H:%M:%S')] INFO ${NC} $1"; }
-log_success() { echo -e "${GREEN}[$(date '+%H:%M:%S')] OK   ${NC} $1"; }
-log_error()   { echo -e "${RED}[$(date '+%H:%M:%S')] ERR  ${NC} $1"; exit 1; }
-
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/mattermost}"
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-MM_IMAGE="${MM_IMAGE:-ghcr.io/cocojary/mattermost:latest}"
-ENV_FILE="$DEPLOY_PATH/.env"
-RELEASES_DIR="$DEPLOY_PATH/releases"
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-develop}"
+COMPOSE_FILE="docker-compose.prod.yml"
+WEBAPP_ARTIFACT="/tmp/webapp-dist.tar.gz"
 
-log_info "====== BẮT ĐẦU DEPLOY ======"
-log_info "Image: $MM_IMAGE"
+log() { echo "[$(date +%H:%M:%S)] $1  $2"; }
 
-# ── Kiểm tra điều kiện ───────────────────────────────────────
-[ -f "$ENV_FILE" ]   || log_error "Không tìm thấy $ENV_FILE!"
-[ -f "$DEPLOY_PATH/$COMPOSE_FILE" ] || log_error "Không tìm thấy $DEPLOY_PATH/$COMPOSE_FILE!"
+cd "$DEPLOY_PATH" || exit 1
 
-mkdir -p "$RELEASES_DIR"
+# -- 1. Luu trang thai hien tai
+log "INFO" "Luu trang thai hien tai..."
+PREV_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "none")
+log "INFO" "Commit hien tai: $PREV_COMMIT"
 
-# ── Lưu trạng thái hiện tại để rollback ──────────────────────
-CURRENT_IMAGE=$(docker inspect --format='{{.Config.Image}}' mattermost-app 2>/dev/null || echo "none")
-echo "$CURRENT_IMAGE" > "$RELEASES_DIR/last_image.txt"
-log_info "Phiên bản hiện tại: $CURRENT_IMAGE"
+# -- 2. Pull code moi nhat
+log "INFO" "Pull code tu origin/$DEPLOY_BRANCH..."
+git fetch origin "$DEPLOY_BRANCH"
+git reset --hard "origin/$DEPLOY_BRANCH"
 
-# ── Pull image mới từ GHCR ────────────────────────────────────
-log_info "Pull image mới: $MM_IMAGE"
-docker pull "$MM_IMAGE" || log_error "Không thể pull image: $MM_IMAGE"
-log_success "Pull image xong"
+NEW_COMMIT=$(git rev-parse --short HEAD)
+log "INFO" "Commit moi: $NEW_COMMIT"
 
-# ── Ghi image vào .env để docker compose dùng ────────────────
-# Cập nhật hoặc thêm biến MM_IMAGE vào .env
-if grep -q "^MM_IMAGE=" "$ENV_FILE"; then
-  sed -i "s|^MM_IMAGE=.*|MM_IMAGE=${MM_IMAGE}|" "$ENV_FILE"
+# -- 3. Giai nen webapp pre-built tu CI
+WEBAPP_DIST="$DEPLOY_PATH/webapp/channels/dist"
+if [ -f "$WEBAPP_ARTIFACT" ]; then
+    log "INFO" "Giai nen webapp pre-built tu CI..."
+    rm -rf "$WEBAPP_DIST"
+    mkdir -p "$WEBAPP_DIST"
+    tar xzf "$WEBAPP_ARTIFACT" -C "$WEBAPP_DIST"
+    rm -f "$WEBAPP_ARTIFACT"
+    log "INFO" "Webapp giai nen thanh cong"
 else
-  echo "MM_IMAGE=${MM_IMAGE}" >> "$ENV_FILE"
+    log "WARN" "Khong tim thay $WEBAPP_ARTIFACT — dung webapp co san"
+    if [ ! -d "$WEBAPP_DIST" ]; then
+        log "ERROR" "Khong co webapp dist! Can chay CI build truoc."
+        exit 1
+    fi
 fi
 
-# ── Restart containers ────────────────────────────────────────
-log_info "Khởi động lại containers..."
-cd "$DEPLOY_PATH"
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --force-recreate mattermost
+# -- Debug: kiem tra webapp dist
+log "INFO" "Kiem tra webapp dist..."
+if [ -d "$WEBAPP_DIST" ]; then
+    FILE_COUNT=$(find "$WEBAPP_DIST" -type f 2>/dev/null | wc -l)
+    log "INFO" "Webapp dist: $FILE_COUNT files"
+else
+    log "ERROR" "Webapp dist directory khong ton tai!"
+    exit 1
+fi
+
+# -- 4. Build va deploy voi Docker Compose
+log "INFO" "Build va deploy voi docker compose..."
+docker compose -f "$COMPOSE_FILE" up -d --build --remove-orphans 2>&1
+
+# -- 5. Kiem tra container status
 sleep 5
+log "INFO" "Kiem tra container..."
 docker compose -f "$COMPOSE_FILE" ps
 
-# ── Ghi log ──────────────────────────────────────────────────
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-cat >> "$RELEASES_DIR/deploy_history.log" << EOF
-[$TIMESTAMP] DEPLOY OK | Image: $MM_IMAGE | Prev: $CURRENT_IMAGE
-EOF
-
-log_success "====== DEPLOY HOÀN TẤT ======"
+# -- 6. Luu thong tin deploy
+mkdir -p "$DEPLOY_PATH/releases"
+echo "$PREV_COMMIT" > "$DEPLOY_PATH/releases/last_commit.txt"
+log "INFO" "=== Deploy hoan tat ==="
+log "INFO" "  Tu: $PREV_COMMIT -> $NEW_COMMIT"
+log "INFO" "  Rollback: bash scripts/rollback.sh"

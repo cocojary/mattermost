@@ -2,20 +2,20 @@
 // See LICENSE.txt for license information.
 
 import classNames from 'classnames';
-import React, {lazy} from 'react';
+import React, { lazy } from 'react';
 
-import {makeAsyncComponent} from 'components/async_load';
+import { makeAsyncComponent } from 'components/async_load';
 import DataPrefetch from 'components/data_prefetch';
 import ResizableLhs from 'components/resizable_sidebar/resizable_lhs';
 import SidebarHeader from 'components/sidebar/sidebar_header';
 
 import Pluggable from 'plugins/pluggable';
-import Constants, {ModalIdentifiers, RHSStates} from 'utils/constants';
-import {isKeyPressed, cmdOrCtrlPressed} from 'utils/keyboard';
-import {localizeMessage} from 'utils/utils';
+import Constants, { ModalIdentifiers, RHSStates } from 'utils/constants';
+import { isKeyPressed, cmdOrCtrlPressed } from 'utils/keyboard';
+import { localizeMessage } from 'utils/utils';
 
-import type {ModalData} from 'types/actions';
-import type {RhsState} from 'types/store/rhs';
+import type { ModalData } from 'types/actions';
+import type { RhsState } from 'types/store/rhs';
 
 import ChannelNavigator from './channel_navigator';
 import SidebarList from './sidebar_list';
@@ -38,6 +38,7 @@ type Props = {
     isOpen: boolean;
     actions: {
         fetchMyCategories: (teamId: string) => void;
+        initRecentlyViewedChannels: (teamId: string) => void;
         openModal: <P>(modalData: ModalData<P>) => void;
         closeModal: (modalId: string) => void;
         clearChannelSelection: () => void;
@@ -68,6 +69,7 @@ export default class Sidebar extends React.PureComponent<Props, State> {
     componentDidMount() {
         if (this.props.teamId) {
             this.props.actions.fetchMyCategories(this.props.teamId);
+            this.props.actions.initRecentlyViewedChannels(this.props.teamId);
         }
 
         window.addEventListener('click', this.handleClickClearChannelSelection);
@@ -128,11 +130,11 @@ export default class Sidebar extends React.PureComponent<Props, State> {
     };
 
     showMoreDirectChannelsModal = () => {
-        this.setState({showDirectChannelsModal: true});
+        this.setState({ showDirectChannelsModal: true });
     };
 
     hideMoreDirectChannelsModal = () => {
-        this.setState({showDirectChannelsModal: false});
+        this.setState({ showDirectChannelsModal: false });
     };
 
     showCreateCategoryModal = () => {
@@ -154,7 +156,7 @@ export default class Sidebar extends React.PureComponent<Props, State> {
         this.props.actions.openModal({
             modalId: ModalIdentifiers.INVITATION,
             dialogType: InvitationModal,
-            dialogProps: {focusOriginElement: 'browseOrAddChannelMenuButton'},
+            dialogProps: { focusOriginElement: 'browseOrAddChannelMenuButton' },
         });
     };
 
@@ -184,11 +186,11 @@ export default class Sidebar extends React.PureComponent<Props, State> {
     };
 
     onDragStart = () => {
-        this.setState({isDragging: true});
+        this.setState({ isDragging: true });
     };
 
     onDragEnd = () => {
-        this.setState({isDragging: false});
+        this.setState({ isDragging: false });
     };
 
     renderModals = () => {
@@ -218,10 +220,10 @@ export default class Sidebar extends React.PureComponent<Props, State> {
 
     render() {
         if (!this.props.teamId) {
-            return (<div/>);
+            return (<div />);
         }
 
-        const ariaLabel = localizeMessage({id: 'accessibility.sections.lhsNavigator', defaultMessage: 'channel navigator region'});
+        const ariaLabel = localizeMessage({ id: 'accessibility.sections.lhsNavigator', defaultMessage: 'channel navigator region' });
 
         return (
             <ResizableLhs
@@ -231,7 +233,7 @@ export default class Sidebar extends React.PureComponent<Props, State> {
                     dragging: this.state.isDragging,
                 })}
             >
-                {this.props.isMobileView ? <MobileSidebarHeader/> : (
+                {this.props.isMobileView ? <MobileSidebarHeader /> : (
                     <SidebarHeader
                         showNewChannelModal={this.showNewChannelModal}
                         showMoreChannelsModal={this.showMoreChannelsModal}
@@ -252,17 +254,17 @@ export default class Sidebar extends React.PureComponent<Props, State> {
                     className='a11y__region'
                     data-a11y-sort-order='6'
                 >
-                    <ChannelNavigator/>
+                    <ChannelNavigator />
                 </div>
                 <div className='sidebar--left__icons'>
-                    <Pluggable pluggableName='LeftSidebarHeader'/>
+                    <Pluggable pluggableName='LeftSidebarHeader' />
                 </div>
                 <SidebarList
                     handleOpenMoreDirectChannelsModal={this.handleOpenMoreDirectChannelsModal}
                     onDragStart={this.onDragStart}
                     onDragEnd={this.onDragEnd}
                 />
-                <DataPrefetch/>
+                <DataPrefetch />
                 {this.renderModals()}
             </ResizableLhs>
         );

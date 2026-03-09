@@ -1,9 +1,9 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useEffect} from 'react';
-import {useIntl} from 'react-intl';
-import {useSelector} from 'react-redux';
+import React, { useEffect } from 'react';
+import { useIntl } from 'react-intl';
+import { useSelector } from 'react-redux';
 
 import {
     AccountMultipleOutlineIcon,
@@ -13,13 +13,13 @@ import {
     ViewGridPlusOutlineIcon,
     WebhookIncomingIcon,
 } from '@mattermost/compass-icons/components';
-import type {UserProfile} from '@mattermost/types/users';
+import type { UserProfile } from '@mattermost/types/users';
 
-import {Permissions} from 'mattermost-redux/constants';
-import {isCurrentUserSystemAdmin} from 'mattermost-redux/selectors/entities/users';
+import { Permissions } from 'mattermost-redux/constants';
+import { isCurrentUserSystemAdmin } from 'mattermost-redux/selectors/entities/users';
 
 import AboutBuildModal from 'components/about_build_modal';
-import {VisitSystemConsoleTour} from 'components/onboarding_tasks';
+import { VisitSystemConsoleTour } from 'components/onboarding_tasks';
 import SystemPermissionGate from 'components/permissions_gates/system_permission_gate';
 import TeamPermissionGate from 'components/permissions_gates/team_permission_gate';
 import MarketplaceModal from 'components/plugin_marketplace/marketplace_modal';
@@ -27,12 +27,12 @@ import UserGroupsModal from 'components/user_groups_modal';
 import Menu from 'components/widgets/menu/menu';
 import RestrictedIndicator from 'components/widgets/menu/menu_items/restricted_indicator';
 
-import {FREEMIUM_TO_ENTERPRISE_TRIAL_LENGTH_DAYS} from 'utils/cloud_utils';
-import {LicenseSkus, ModalIdentifiers, MattermostFeatures} from 'utils/constants';
-import {makeUrlSafe} from 'utils/url';
+import { FREEMIUM_TO_ENTERPRISE_TRIAL_LENGTH_DAYS } from 'utils/cloud_utils';
+import { LicenseSkus, ModalIdentifiers, MattermostFeatures } from 'utils/constants';
+import { makeUrlSafe } from 'utils/url';
 import * as UserAgent from 'utils/user_agent';
 
-import type {ModalData} from 'types/actions';
+import type { ModalData } from 'types/actions';
 
 import './product_menu_list.scss';
 
@@ -86,7 +86,7 @@ const ProductMenuList = (props: Props): JSX.Element | null => {
         isMobile = false,
         enableCustomUserGroups,
     } = props;
-    const {formatMessage} = useIntl();
+    const { formatMessage } = useIntl();
     const isAdmin = useSelector(isCurrentUserSystemAdmin);
 
     useEffect(() => {
@@ -113,8 +113,7 @@ const ProductMenuList = (props: Props): JSX.Element | null => {
     return (
         <Menu.Group>
             <div onClick={onClick}>
-                <Menu.CloudTrial id='menuCloudTrial'/>
-                <Menu.ItemCloudLimit id='menuItemCloudLimit'/>
+                <Menu.ItemCloudLimit id='menuItemCloudLimit' />
                 <SystemPermissionGate permissions={Permissions.SYSCONSOLE_READ_PERMISSIONS}>
                     <Menu.ItemLink
                         id='systemConsole'
@@ -122,26 +121,26 @@ const ProductMenuList = (props: Props): JSX.Element | null => {
                         to='/admin_console'
                         text={(
                             <>
-                                {formatMessage({id: 'navbar_dropdown.console', defaultMessage: 'System Console'})}
+                                {formatMessage({ id: 'navbar_dropdown.console', defaultMessage: 'System Console' })}
                                 {showVisitSystemConsoleTour && (
                                     <div
                                         onClick={handleVisitConsoleClick}
                                         className={'system-console-visit'}
                                     >
-                                        <VisitSystemConsoleTour/>
+                                        <VisitSystemConsoleTour />
                                     </div>
                                 )}
                             </>
                         )}
-                        icon={<ApplicationCogIcon size={18}/>}
+                        icon={<ApplicationCogIcon size={18} />}
                     />
                 </SystemPermissionGate>
                 <Menu.ItemLink
                     id='integrations'
                     show={isMessaging && showIntegrations}
                     to={'/' + teamName + '/integrations'}
-                    text={formatMessage({id: 'navbar_dropdown.integrations', defaultMessage: 'Integrations'})}
-                    icon={<WebhookIncomingIcon size={18}/>}
+                    text={formatMessage({ id: 'navbar_dropdown.integrations', defaultMessage: 'Integrations' })}
+                    icon={<WebhookIncomingIcon size={18} />}
                 />
                 <Menu.ItemToggleModalRedux
                     id='userGroups'
@@ -151,8 +150,8 @@ const ProductMenuList = (props: Props): JSX.Element | null => {
                     dialogProps={{
                         backButtonAction: openGroupsModal,
                     }}
-                    text={formatMessage({id: 'navbar_dropdown.userGroups', defaultMessage: 'User Groups'})}
-                    icon={<AccountMultipleOutlineIcon size={18}/>}
+                    text={formatMessage({ id: 'navbar_dropdown.userGroups', defaultMessage: 'User Groups' })}
+                    icon={<AccountMultipleOutlineIcon size={18} />}
                     disabled={isStarterFree}
                     sibling={(isAdmin && (isStarterFree || isFreeTrial)) && (
                         <RestrictedIndicator
@@ -171,9 +170,9 @@ const ProductMenuList = (props: Props): JSX.Element | null => {
                                 id: 'navbar_dropdown.userGroups.modal.messageAdminPreTrial',
                                 defaultMessage: 'Create unlimited user groups with one of our paid plans. Get the full experience of Enterprise when you start a free, {trialLength} day trial.',
                             },
-                            {
-                                trialLength: FREEMIUM_TO_ENTERPRISE_TRIAL_LENGTH_DAYS,
-                            },
+                                {
+                                    trialLength: FREEMIUM_TO_ENTERPRISE_TRIAL_LENGTH_DAYS,
+                                },
                             )}
                             titleAdminPostTrial={formatMessage({
                                 id: 'navbar_dropdown.userGroups.modal.titleAdminPostTrial',
@@ -203,23 +202,16 @@ const ProductMenuList = (props: Props): JSX.Element | null => {
                         modalId={ModalIdentifiers.PLUGIN_MARKETPLACE}
                         show={isMessaging && !isMobile && enablePluginMarketplace}
                         dialogType={MarketplaceModal}
-                        text={formatMessage({id: 'navbar_dropdown.marketplace', defaultMessage: 'App Marketplace'})}
-                        icon={<ViewGridPlusOutlineIcon size={18}/>}
+                        text={formatMessage({ id: 'navbar_dropdown.marketplace', defaultMessage: 'App Marketplace' })}
+                        icon={<ViewGridPlusOutlineIcon size={18} />}
                     />
                 </TeamPermissionGate>
                 <Menu.ItemExternalLink
                     id='nativeAppLink'
                     show={appDownloadLink && !UserAgent.isMobileApp()}
                     url={makeUrlSafe(appDownloadLink)}
-                    text={formatMessage({id: 'navbar_dropdown.nativeApps', defaultMessage: 'Download Apps'})}
-                    icon={<DownloadOutlineIcon size={18}/>}
-                />
-                <Menu.ItemToggleModalRedux
-                    id='about'
-                    modalId={ModalIdentifiers.ABOUT}
-                    dialogType={AboutBuildModal}
-                    text={formatMessage({id: 'navbar_dropdown.about', defaultMessage: 'About {appTitle}'}, {appTitle: siteName})}
-                    icon={<InformationOutlineIcon size={18}/>}
+                    text={formatMessage({ id: 'navbar_dropdown.nativeApps', defaultMessage: 'Download Apps' })}
+                    icon={<DownloadOutlineIcon size={18} />}
                 />
             </div>
         </Menu.Group>

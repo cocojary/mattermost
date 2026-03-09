@@ -1,12 +1,12 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import type {ChannelCategory} from '@mattermost/types/channel_categories';
-import {CategorySorting} from '@mattermost/types/channel_categories';
-import type {Channel} from '@mattermost/types/channels';
-import type {RelationOneToOne} from '@mattermost/types/utilities';
+import type { ChannelCategory } from '@mattermost/types/channel_categories';
+import { CategorySorting } from '@mattermost/types/channel_categories';
+import type { Channel } from '@mattermost/types/channels';
+import type { RelationOneToOne } from '@mattermost/types/utilities';
 
-import {createSelector} from 'mattermost-redux/selectors/create_selector';
+import { createSelector } from 'mattermost-redux/selectors/create_selector';
 import {
     makeGetCategoriesForTeam,
     makeGetChannelsByCategory,
@@ -19,11 +19,11 @@ import {
     getUnreadChannelIds,
     sortUnreadChannels,
 } from 'mattermost-redux/selectors/entities/channels';
-import {shouldShowUnreadsCategory, isCollapsedThreadsEnabled} from 'mattermost-redux/selectors/entities/preferences';
-import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
-import {memoizeResult} from 'mattermost-redux/utils/helpers';
+import { shouldShowUnreadsCategory, isCollapsedThreadsEnabled } from 'mattermost-redux/selectors/entities/preferences';
+import { getCurrentTeamId } from 'mattermost-redux/selectors/entities/teams';
+import { memoizeResult } from 'mattermost-redux/utils/helpers';
 
-import type {DraggingState, GlobalState} from 'types/store';
+import type { DraggingState, GlobalState } from 'types/store';
 
 export function isUnreadFilterEnabled(state: GlobalState): boolean {
     return state.views.channelSidebar.unreadFilterEnabled && !shouldShowUnreadsCategory(state);
@@ -244,3 +244,8 @@ export function getDraggingState(state: GlobalState): DraggingState {
 export function isChannelSelected(state: GlobalState, channelId: string): boolean {
     return state.views.channelSidebar.multiSelectedChannelIds.indexOf(channelId) !== -1;
 }
+
+export function getRecentlyViewedChannelIds(state: GlobalState): string[] {
+    return state.views.channelSidebar.recentlyViewedChannelIds || [];
+}
+

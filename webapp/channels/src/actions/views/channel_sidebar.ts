@@ -1,18 +1,18 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {createCategory as createCategoryRedux, moveChannelsToCategory} from 'mattermost-redux/actions/channel_categories';
-import {General} from 'mattermost-redux/constants';
-import {CategoryTypes} from 'mattermost-redux/constants/channel_categories';
-import {getCategory, makeGetChannelIdsForCategory} from 'mattermost-redux/selectors/entities/channel_categories';
-import {getCurrentChannelId} from 'mattermost-redux/selectors/entities/channels';
-import {insertMultipleWithoutDuplicates} from 'mattermost-redux/utils/array_utils';
+import { createCategory as createCategoryRedux, moveChannelsToCategory } from 'mattermost-redux/actions/channel_categories';
+import { General } from 'mattermost-redux/constants';
+import { CategoryTypes } from 'mattermost-redux/constants/channel_categories';
+import { getCategory, makeGetChannelIdsForCategory } from 'mattermost-redux/selectors/entities/channel_categories';
+import { getCurrentChannelId } from 'mattermost-redux/selectors/entities/channels';
+import { insertMultipleWithoutDuplicates } from 'mattermost-redux/utils/array_utils';
 
-import {getCategoriesForCurrentTeam, getChannelsInCategoryOrder, getDisplayedChannels} from 'selectors/views/channel_sidebar';
+import { getCategoriesForCurrentTeam, getChannelsInCategoryOrder, getDisplayedChannels } from 'selectors/views/channel_sidebar';
 
-import {ActionTypes} from 'utils/constants';
+import { ActionTypes } from 'utils/constants';
 
-import type {ActionFunc, ActionFuncAsync, DraggingState, GlobalState} from 'types/store';
+import type { ActionFunc, ActionFuncAsync, DraggingState, GlobalState } from 'types/store';
 
 export function setUnreadFilterEnabled(enabled: boolean) {
     return {
@@ -29,8 +29,50 @@ export function setDraggingState(data: DraggingState) {
 }
 
 export function stopDragging() {
-    return {type: ActionTypes.SIDEBAR_DRAGGING_STOP};
+    return { type: ActionTypes.SIDEBAR_DRAGGING_STOP };
 }
+
+export function initRecentlyViewedChannels(teamId: string): ActionFuncAsync<unknown> {
+    return async (dispatch, getState) => {
+        const state = getState();
+        const userId = state.entities.users.currentUserId;
+        const { default: LocalStorageStore } = await import('stores/local_storage_store');
+        const recentChannels = LocalStorageStore.getRecentChannels(userId, teamId);
+
+        return dispatch({
+            type: ActionTypes.UPDATE_RECENTLY_VIEWED_CHANNELS,
+            data: recentChannels,
+        });
+    };
+}
+
+const MAX_RECENTLY_VIEWED = 20;
+
+export function updateRecentlyViewedChannels(channelId: string): ActionFuncAsync<unknown> {
+    return async (dispatch, getState) => {
+        const state = getState();
+        const userId = state.entities.users.currentUserId;
+        const teamId = state.entities.teams.currentTeamId;
+
+        if (!userId || !teamId || !channelId) {
+            return { data: false };
+        }
+
+        const { default: LocalStorageStore } = await import('stores/local_storage_store');
+        const current = LocalStorageStore.getRecentChannels(userId, teamId);
+
+        // Remove duplicate and push new channel to front
+        const updated = [channelId, ...current.filter((id) => id !== channelId)].slice(0, MAX_RECENTLY_VIEWED);
+
+        LocalStorageStore.setRecentChannels(userId, teamId, updated);
+
+        return dispatch({
+            type: ActionTypes.UPDATE_RECENTLY_VIEWED_CHANNELS,
+            data: updated,
+        });
+    };
+}
+
 
 export function createCategory(teamId: string, displayName: string, channelIds?: string[]): ActionFuncAsync<unknown> {
     return async (dispatch, getState) => {
@@ -142,14 +184,14 @@ export function clearChannelSelection(): ActionFunc<unknown> {
 
         if (state.views.channelSidebar.multiSelectedChannelIds.length === 0) {
             // No selection to clear
-            return {data: false};
+            return { data: false };
         }
 
         dispatch({
             type: ActionTypes.MULTISELECT_CHANNEL_CLEAR,
         });
 
-        return {data: true};
+        return { data: true };
     };
 }
 
@@ -201,7 +243,7 @@ export function multiSelectChannelTo(channelId: string): ActionFunc<unknown> {
 
         // nothing to do here
         if (indexOfNew === indexOfLast) {
-            return {data: false};
+            return { data: false };
         }
 
         const start: number = Math.min(indexOfLast, indexOfNew);
