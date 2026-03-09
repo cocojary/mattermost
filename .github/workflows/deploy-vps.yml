@@ -107,7 +107,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "export DEPLOY_PATH='${{ env.DEPLOY_PATH }}' && \
-             export DEPLOY_BRANCH='develop' && \
+             export DEPLOY_BRANCH='master' && \
              bash ${{ env.DEPLOY_PATH }}/scripts/deploy.sh"
 
       - name: Cleanup SSH key
